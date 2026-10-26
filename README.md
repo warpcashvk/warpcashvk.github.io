@@ -79,7 +79,7 @@ tout le monde verra la nouvelle version tout de suite.
 ## Mentions légales et données
 
 La page `/mentions-legales/` (fichier `outils/pages/mentions.html`) contient les mentions légales
-(site non professionnel : éditeurs sous pseudo + hébergeur GitHub, LCEN art. 6-III-2), les avertissements
+(site non professionnel : éditeurs sous pseudo + hébergeur GitHub, LCEN art. 1-1, II, depuis la loi SREN de 2024), les avertissements
 Mojang / VikingCraft, les crédits et la politique de confidentialité.
 **À mettre à jour** si vous ajoutez un service externe, un stockage dans le navigateur, un formulaire,
 une mesure d'audience (qui demanderait alors un bandeau de consentement) ou si le site devient commercial.
