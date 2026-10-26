@@ -561,16 +561,12 @@ kbd { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; backgrou
   background: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/block/snow.png") 0 0 / 14px repeat-x;
   image-rendering: pixelated; border-radius: var(--r) var(--r) 0 0; box-shadow: 0 2px 0 rgba(255, 255, 255, .12);
 }
-/* guirlande lumineuse sous la barre du haut */
-[data-theme="noel"] .topbar::after {
-  content: ""; position: absolute; left: 24px; right: 24px; bottom: -5px; height: 9px; pointer-events: none;
-  background:
-    radial-gradient(circle, #ff4d5a 2.5px, transparent 3.5px) 0 0 / 36px 9px repeat-x,
-    radial-gradient(circle, #5ee38a 2.5px, transparent 3.5px) 12px 0 / 36px 9px repeat-x,
-    radial-gradient(circle, #ffcc4d 2.5px, transparent 3.5px) 24px 0 / 36px 9px repeat-x;
-  animation: twinkle 1.6s steps(2) infinite;
-}
-@keyframes twinkle { 50% { opacity: .55; } }
+/* guirlande d'ampoules sous la barre du haut (dessinée par js/theme.js) */
+.garland { position: absolute; left: 22px; right: 22px; top: calc(100% - 2px); height: 40px; pointer-events: none; }
+.garland svg { display: block; overflow: visible; }
+.garland path { fill: none; stroke: #4f7a56; stroke-width: 1.8; stroke-linecap: round; }
+.bulb { filter: drop-shadow(0 0 4px var(--c)) drop-shadow(0 0 9px var(--c)); animation: bulb 1.8s ease-in-out infinite; }
+@keyframes bulb { 0%, 100% { opacity: 1; } 50% { opacity: .4; filter: none; } }
 [data-theme="noel"] .splash { color: #fff; }
-@media (prefers-reduced-motion: reduce) { [data-theme="noel"] .topbar::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bulb { animation: none; } }
 @media (max-width: 860px) { .season-toggle { left: 12px; bottom: 12px; width: 42px; height: 42px; font-size: 20px; } }

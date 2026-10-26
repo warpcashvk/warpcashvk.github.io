@@ -38,7 +38,7 @@ const setOff = off => { try { off ? localStorage.setItem(KEY, stamp) : localStor
 if (!isOff()) root.dataset.theme = cur.id;
 
 const saved = { splash: null, logo: null, color: null };
-let fx = null;
+let fx = null, lights = null;
 
 function apply(on) {
   if (on) root.dataset.theme = cur.id; else delete root.dataset.theme;
@@ -57,6 +57,41 @@ function apply(on) {
   }
   if (on && !fx) fx = startFx();
   if (!on && fx) { fx.stop(); fx = null; }
+  if (cur.id === "noel") {
+    if (on && !lights) lights = startGarland();
+    if (!on && lights) { lights.stop(); lights = null; }
+  }
+}
+
+// ---------- Guirlande d'ampoules sous la barre du haut (Noël) ----------
+const BULBS = ["#ff4d5a", "#4ade80", "#ffcc4d", "#5aa9ff"];
+function startGarland() {
+  const bar = document.querySelector(".topbar");
+  if (!bar) return null;
+  const g = document.createElement("div");
+  g.className = "garland"; g.setAttribute("aria-hidden", "true");
+  bar.append(g);
+  const draw = () => {
+    const w = Math.round(g.clientWidth);
+    if (!w) return;
+    // un fil qui pend en vagues, une ampoule au creux de chaque vague
+    const n = Math.max(3, Math.round(w / 66)), step = w / n;
+    let path = "M0 2", bulbs = "";
+    for (let i = 0; i < n; i++) {
+      const x = i * step + step / 2, y = 14, tilt = i % 2 ? 8 : -8;
+      path += ` Q${x.toFixed(1)} 26 ${((i + 1) * step).toFixed(1)} 2`;
+      bulbs += `<g class="bulb" style="--c:${BULBS[i % 4]};animation-delay:${(i % 4) * .45}s" transform="rotate(${tilt} ${x.toFixed(1)} ${y})">
+        <rect x="${(x - 2.8).toFixed(1)}" y="${y - .5}" width="5.6" height="5.5" rx="1.2" fill="#2d4a31"/>
+        <ellipse cx="${x.toFixed(1)}" cy="${y + 11.5}" rx="4.8" ry="7" fill="${BULBS[i % 4]}"/>
+        <ellipse cx="${(x - 1.6).toFixed(1)}" cy="${y + 9}" rx="1.3" ry="2.4" fill="#fff" opacity=".65"/>
+      </g>`;
+    }
+    g.innerHTML = `<svg width="${w}" height="40" viewBox="0 0 ${w} 40"><path d="${path}"/>${bulbs}</svg>`;
+  };
+  const ro = new ResizeObserver(draw);
+  ro.observe(g);
+  draw();
+  return { stop() { ro.disconnect(); g.remove(); } };
 }
 
 // ---------- Effet animé : neige (Noël) ou chauves-souris (Halloween) ----------
