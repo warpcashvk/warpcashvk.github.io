@@ -4,10 +4,11 @@
       <h1 class="h2">Espace équipe</h1>
       <form class="lock panel" id="lockForm">
         <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/trial_key.png" alt="">
-        <label for="pw">Mot de passe</label>
-        <input class="field" id="pw" type="password" autocomplete="current-password">
+        <label for="ghLogin">Jeton GitHub</label>
+        <input class="field" id="ghLogin" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        <label class="check"><input type="checkbox" id="ghLoginRemember"> Se souvenir sur cet appareil</label>
         <button class="btn" type="submit">Entrer</button>
-        <p class="err" id="pwErr" hidden>Mauvais mot de passe.</p>
+        <p class="err" id="loginErr" role="alert" hidden></p>
       </form>
       <div id="dash" hidden></div>
       <div id="editor" hidden></div>

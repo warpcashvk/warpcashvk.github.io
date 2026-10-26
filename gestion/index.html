@@ -14,9 +14,9 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/img/icones/emeraude-192.png">
 <link rel="apple-touch-icon" href="/img/icones/apple-touch-icon.png">
 <link rel="preload" href="/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/polices.css?v=11">
-<link rel="stylesheet" href="/css/style.css?v=11">
-<script src="/js/theme.js?v=11"></script>
+<link rel="stylesheet" href="/css/polices.css?v=12">
+<link rel="stylesheet" href="/css/style.css?v=12">
+<script src="/js/theme.js?v=12"></script>
 </head>
 <body data-page="gestion">
 
@@ -51,10 +51,11 @@
       <h1 class="h2">Espace équipe</h1>
       <form class="lock panel" id="lockForm">
         <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/trial_key.png" alt="">
-        <label for="pw">Mot de passe</label>
-        <input class="field" id="pw" type="password" autocomplete="current-password">
+        <label for="ghLogin">Jeton GitHub</label>
+        <input class="field" id="ghLogin" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        <label class="check"><input type="checkbox" id="ghLoginRemember"> Se souvenir sur cet appareil</label>
         <button class="btn" type="submit">Entrer</button>
-        <p class="err" id="pwErr" hidden>Mauvais mot de passe.</p>
+        <p class="err" id="loginErr" role="alert" hidden></p>
       </form>
       <div id="dash" hidden></div>
       <div id="editor" hidden></div>
@@ -96,7 +97,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/js/config.js?v=11"></script>
-<script src="/js/app.js?v=11"></script>
+<script src="/js/config.js?v=12"></script>
+<script src="/js/app.js?v=12"></script>
 </body>
 </html>

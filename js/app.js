@@ -164,6 +164,7 @@ const S = {
   refreshed: null,
   view: { mode: "sell", q: "", cat: "", sort: "nom", hideEmpty: false },
   cart: {},       // id du shop → { q: quantité, n: nom, m: material, u: prix unitaire, o: proprio, max: stock }
+  staff: false,   // Espace équipe ouvert (jeton GitHub vérifié), en mémoire seulement
 };
 
 // Items dont le même MATERIAL cache des variantes très différentes : pas de comparaison de prix
@@ -777,28 +778,39 @@ function renderBoards(rows, partial) {
 }
 
 // ---------- Espace équipe ----------
-const staffUnlocked = () => { try { return sessionStorage.getItem("wc_staff") === "1"; } catch { return false; } };
-const toHex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
-async function pbkdf2(password, saltHex, iterations) {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const salt = Uint8Array.from(saltHex.match(/../g).map(h => parseInt(h, 16)));
-  return toHex(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations }, key, 256));
+// On entre avec son jeton GitHub : GitHub dit si le compte peut modifier le dépôt.
+// Rien de secret n'est écrit dans le code du site, et l'état « connecté » ne vit qu'en mémoire.
+const staffUnlocked = () => S.staff === true;
+const ghHeaders = token => ({ Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" });
+async function checkToken(token) {
+  let r;
+  try { r = await fetch(`https://api.github.com/repos/${C.github.depot}`, { headers: ghHeaders(token), cache: "no-store" }); }
+  catch { return { ok: false, net: true, err: "Impossible de joindre GitHub. Réessaie dans un instant." }; }
+  if (r.status === 401) return { ok: false, err: "Jeton refusé par GitHub (expiré ou mal copié)." };
+  if (!r.ok) return { ok: false, err: "Ce jeton n'a pas accès au dépôt du site." };
+  const repo = await r.json().catch(() => ({}));
+  return repo.permissions?.push === true ? { ok: true } : { ok: false, err: "Ce compte ne peut pas modifier le dépôt du site." };
 }
-// Dans la console du site : await warpCash.nouveauMotDePasse("mon mot de passe")
-// → affiche le bloc motDePasse à coller dans js/config.js
-window.warpCash = {
-  async nouveauMotDePasse(password) {
-    const sel = toHex(crypto.getRandomValues(new Uint8Array(16)).buffer), iterations = 600000;
-    const bloc = { sel, iterations, empreinte: await pbkdf2(password, sel, iterations) };
-    console.log("motDePasse: " + JSON.stringify(bloc, null, 2) + ",");
-    return bloc;
-  },
-};
+function loginError(t) { const p = $("#loginErr"); p.textContent = t; p.hidden = !t; }
+async function login(token, remember, auto) {
+  const btn = $("#lockForm button[type=submit]");
+  btn.disabled = true; if (!auto) loginError("");
+  const res = await checkToken(token);
+  btn.disabled = false;
+  if (!res.ok) {
+    if (!res.net) tokenSet("");   // jeton enregistré mais refusé : on l'oublie
+    loginError(auto ? "Ton jeton enregistré ne marche plus : " + res.err : res.err);
+    return;
+  }
+  tokenSet(token, remember);
+  S.staff = true; $("#ghLogin").value = ""; loginError(""); showStaff();
+}
+function logout() { tokenSet(""); S.staff = false; E.draft = null; E.dirty = false; showStaff(); }
 function showStaff() {
   if (PAGE !== "gestion") return;
   const ok = staffUnlocked();
   $("#lockForm").hidden = ok; $("#dash").hidden = !ok; $("#editor").hidden = !ok;
-  if (ok) { renderDash(); renderEditor(); } else setTimeout(() => $("#pw").focus(), 50);
+  if (ok) { renderDash(); renderEditor(); } else setTimeout(() => $("#ghLogin").focus(), 50);
 }
 function renderDash() {
   if (!S.ours.length) { $("#dash").innerHTML = `<p class="loading">Chargement…</p>`; return; }
@@ -894,13 +906,11 @@ function renderEditor() {
 
       <div class="panel ed-save">
         <h4>Enregistrer</h4>
-        <label for="ghToken">Jeton GitHub</label>
-        <input class="field" id="ghToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" value="${esc(tokenGet())}">
-        <label class="check"><input type="checkbox" id="ghRemember" ${remembered() ? "checked" : ""}> Se souvenir sur cet appareil</label>
         <button class="btn btn-accent" type="button" id="edSave">Enregistrer sur le site</button>
         <button class="btn btn-sm" type="button" id="edReset">Annuler mes changements</button>
         <p class="ed-state${E.dirty ? "" : " ok"}" id="edState" role="status">${E.dirty ? "Modifications non enregistrées" : "À jour"}</p>
-        <p class="muted ed-help">Le jeton reste dans ce navigateur. Ne le donne à personne.</p>
+        <p class="muted ed-help">Connecté avec ton jeton GitHub${remembered() ? ", retenu sur cet appareil" : " pour cet onglet"}. Ne le donne à personne.</p>
+        <button class="btn btn-sm" type="button" id="edLogout">Se déconnecter</button>
       </div>
     </div>
 
@@ -952,11 +962,10 @@ function edMoveCat(i, dir) {
 const b64 = str => { let bin = ""; for (const b of new TextEncoder().encode(str)) bin += String.fromCharCode(b); return btoa(bin); };
 async function edSave() {
   const msg = t => { $("#edState").textContent = t; };
-  const token = $("#ghToken").value.trim();
-  if (!token) { msg("Colle d'abord ton jeton GitHub."); $("#ghToken").focus(); return; }
-  tokenSet(token, $("#ghRemember").checked);
+  const token = tokenGet();
+  if (!token) { logout(); return; }
   const g = C.github, url = `https://api.github.com/repos/${g.depot}/contents/${g.fichier}`;
-  const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  const headers = ghHeaders(token);
   $("#edSave").disabled = true; msg("Enregistrement…");
   try {
     const cur = await fetch(`${url}?ref=${encodeURIComponent(g.branche)}`, { headers, cache: "no-store" });
@@ -993,7 +1002,6 @@ function bindEditor() {
     const t = e.target;
     if (t.dataset.edM) edSetField(t.dataset.edM, t.dataset.edF, t.value);
     else if (t.dataset.edRename !== undefined) edRenameCat(+t.dataset.edRename, t.value);
-    else if (t.id === "ghRemember") tokenSet($("#ghToken").value.trim(), t.checked);
   });
   box.addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
@@ -1001,6 +1009,7 @@ function bindEditor() {
     else if (t.dataset.edDel !== undefined) edDelCat(+t.dataset.edDel);
     else if (t.id === "edSave") edSave();
     else if (t.id === "edReset") { E.dirty = false; renderEditor(); }
+    else if (t.id === "edLogout" && (!E.dirty || confirm("Tes modifications non enregistrées seront perdues. Se déconnecter ?"))) logout();
   });
   box.addEventListener("submit", e => {
     if (e.target.id !== "edAdd") return;
@@ -1062,19 +1071,17 @@ function bind() {
   $("#lbClose").addEventListener("click", () => $("#lightbox").close());
   $("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").close(); });
 
-  $("#lockForm")?.addEventListener("submit", async e => {
+  $("#lockForm")?.addEventListener("submit", e => {
     e.preventDefault();
-    if (!window.crypto?.subtle) { $("#pwErr").textContent = "Ouvre le site en https pour te connecter."; $("#pwErr").hidden = false; return; }
-    const mdp = C.motDePasse, btn = e.submitter;
-    if (btn) btn.disabled = true;
-    const ok = await pbkdf2($("#pw").value, mdp.sel, mdp.iterations) === mdp.empreinte;
-    if (btn) btn.disabled = false;
-    if (ok) {
-      try { sessionStorage.setItem("wc_staff", "1"); } catch { /* rien */ }
-      $("#pw").value = ""; $("#pwErr").hidden = true; showStaff();
-    } else { $("#pwErr").hidden = false; }
+    const token = $("#ghLogin").value.trim();
+    if (!token) { loginError("Colle ton jeton GitHub."); $("#ghLogin").focus(); return; }
+    login(token, $("#ghLoginRemember").checked, false);
   });
-  if (PAGE === "gestion") bindEditor();
+  if (PAGE === "gestion") {
+    bindEditor();
+    const saved = tokenGet();
+    if (saved) login(saved, remembered(), true);   // jeton déjà enregistré : on revérifie auprès de GitHub
+  }
 }
 
 // ---------- Démarrage ----------

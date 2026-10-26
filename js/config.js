@@ -35,14 +35,6 @@ window.CONFIG = {
   // JavaScript, donc absente du HTML brut que lisent les robots à spam.
   email: "warpcashvk@gmail.com",
 
-  // Mot de passe de la page « Espace équipe » : jamais écrit en clair, seulement son empreinte
-  // (PBKDF2-SHA256 salée). Pour le changer, voir README.md.
-  motDePasse: {
-    sel: "4f80ba52648d651456557136a473602b",
-    iterations: 600000,
-    empreinte: "dc173d311522091704b7261ab0f8cc539514059c7d40a0ae14bd6513646bd4f4",
-  },
-
   // Secteurs : les shops sont rangés dans le secteur le plus proche (rayon en blocs).
   // Renommez-les librement ; un shop hors de tout secteur est affiché « Hors secteur ».
   secteurs: [
