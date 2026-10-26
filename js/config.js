@@ -76,11 +76,6 @@ window.CONFIG = {
       titre: "La salle des coffres",
       texte: "Le tri automatique : des centaines de coffres et d'entonnoirs qui rangent chaque ressource produite.",
     },
-    {
-      image: "img/zones/entree.webp",
-      titre: "Le passage secret",
-      texte: "Accroupis-toi (sneak) pour rentrer.",
-    },
   ],
 
   // Catégories, notes et promos des items : elles sont dans data/items.json

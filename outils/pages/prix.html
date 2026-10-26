@@ -1,0 +1,32 @@
+  <section class="section">
+    <div class="wrap">
+      <p class="over">Le shop</p>
+      <h1 class="h2">Liste des prix</h1>
+      <p class="lead">En direct depuis l'API VikingCraft. <span class="muted" id="shopsUpdated"></span></p>
+
+      <div class="toolbar panel" id="toolbar">
+        <div class="seg" role="tablist">
+          <button class="seg-btn on" data-mode="sell" role="tab" type="button">On vend <small id="nSell"></small></button>
+          <button class="seg-btn" data-mode="buy" role="tab" type="button">On rachète <small id="nBuy"></small></button>
+        </div>
+        <input class="field" id="q" type="search" placeholder="Chercher un item…" autocomplete="off">
+        <div class="sorts" role="group" aria-label="Trier">
+          <button class="chip on" type="button" data-sort="nom">A–Z</button>
+          <button class="chip" type="button" data-sort="prix">Prix ↑</button>
+          <button class="chip" type="button" data-sort="prix-desc">Prix ↓</button>
+          <button class="chip" type="button" data-sort="stock">Stock</button>
+        </div>
+        <label class="check"><input type="checkbox" id="hideEmpty"> Masquer les ruptures</label>
+        <div class="chips" id="cats" role="group" aria-label="Catégories"></div>
+      </div>
+
+      <p class="hint" id="modeHint"></p>
+      <div class="shop-list" id="shopList"><p class="loading">Chargement des shops…</p></div>
+
+      <div class="legend">
+        <span class="badge b-cheap">Moins cher du serveur</span> personne ne vend moins cher, ni en shop ni à l'hôtel des ventes.
+        <span class="badge b-only">Exclusif</span> personne d'autre ne le vend en ce moment.
+        <span class="badge b-best">Meilleur rachat</span> on rachète plus cher que les autres shops.
+      </div>
+    </div>
+  </section>

@@ -11,6 +11,13 @@ const TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.2
 const VK_TILES = "https://vkanalyzer.nexsarum.dev/map-tiles/overworld/";
 const FULL_STOCK = 3456;   // un double coffre plein (54 stacks)
 const LOW_STOCK = 64;
+const PAGE = document.body.dataset.page || "accueil";
+// chemins d'images de config.js (écrits sans « / » au début) : valables sur toutes les pages
+const asset = p => (/^(https?:)?\/|^data:/.test(p) ? p : "/" + p);
+
+// anciens liens du site en une seule page (/#shops…) → nouvelles pages
+const OLD_ANCHORS = { zones: "/zones/", shops: "/prix/", carte: "/carte/", equipe: "/equipe/", classements: "/classements/", gestion: "/gestion/" };
+if (PAGE === "accueil" && OLD_ANCHORS[location.hash.slice(1)]) location.replace(OLD_ANCHORS[location.hash.slice(1)]);
 
 // ---------- Petits utilitaires ----------
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -112,7 +119,7 @@ function loadSkins() {
       document.querySelectorAll("img[data-head]").forEach(i => { if (i.dataset.head === f.pseudo.toLowerCase()) i.src = s.head; });
       document.querySelectorAll("img[data-body]").forEach(i => { if (i.dataset.body === f.pseudo.toLowerCase()) i.src = s.body; });
     };
-    img.src = f.skin;
+    img.src = asset(f.skin);
   }
 }
 const head = (name, size = 16) => {
@@ -146,15 +153,17 @@ async function api(path, tries = 3) {
 
 // ---------- État ----------
 const S = {
-  all: [],        // tous les shops du serveur (pour comparer les prix)
-  ours: [],       // nos shops, enrichis
-  market: [],     // HDV, prix agrégés par item
+  all: [],        // tous les shops du serveur, le temps de comparer les prix
+  market: [],     // HDV, prix agrégés par item, idem
+  base: [],       // nos shops avec leur comparaison de prix (gardés en cache entre les pages)
+  ours: [],       // les mêmes, avec catégorie, note et promo (data/items.json)
   players: {},    // profils des fondateurs
+  playersLoaded: false,
   items: { categories: ["Divers"], items: {} },   // data/items.json : catégories, notes, promos
   itemsLock: 0,   // après un enregistrement, on garde la version locale le temps que GitHub publie
   refreshed: null,
   view: { mode: "sell", q: "", cat: "", sort: "nom", hideEmpty: false },
-  cart: Object.fromEntries(Object.entries(store.get("wc_cart", {}) || {}).map(([k, v]) => [String(k), int(v)]).filter(([, v]) => v > 0)),
+  cart: {},       // id du shop → { q: quantité, n: nom, m: material, u: prix unitaire, o: proprio, max: stock }
 };
 
 // Items dont le même MATERIAL cache des variantes très différentes : pas de comparaison de prix
@@ -279,47 +288,99 @@ async function loadPlayers() {
 
 async function loadItems() {
   if (Date.now() < S.itemsLock) return;
-  const r = await fetch(`data/items.json?t=${Date.now()}`, { cache: "no-store" });
+  const r = await fetch(`/data/items.json?t=${Date.now()}`, { cache: "no-store" });
   if (!r.ok) throw new Error(`items.json ${r.status}`);
   S.items = cleanItems(await r.json());
 }
 
-function enrich() {
-  S.ours = S.all.filter(s => isOurs(s.ownerName)).map(s => {
-    const extra = S.items.items[s.material] || {};
-    const o = { ...s, cat: extra.categorie || "Divers", note: extra.note || "", promo: extra.promo || "", sector: sector(s) };
+function computeBase() {
+  S.base = S.all.filter(s => isOurs(s.ownerName)).map(s => {
+    const o = { ...s, sector: sector(s) };
     o.cmp = compare(o);
     return o;
   });
+  S.all = []; S.market = [];   // plus besoin une fois les comparaisons faites
+}
+function enrich() {
+  S.ours = S.base.map(s => {
+    const extra = S.items.items[s.material] || {};
+    return { ...s, cat: extra.categorie || "Divers", note: extra.note || "", promo: extra.promo || "" };
+  });
+}
+
+// ---------- Cache entre les pages (3 min) : changer de page ne relance pas tout le chargement ----------
+const CACHE_MS = 180e3;
+function cacheGet(k) {
+  try { const v = JSON.parse(sessionStorage.getItem("wc_" + k)); return v && Date.now() - v.t < CACHE_MS ? v.d : null; }
+  catch { return null; }
+}
+function cacheSet(k, d) { try { sessionStorage.setItem("wc_" + k, JSON.stringify({ t: Date.now(), d })); } catch { /* stockage plein ou indisponible */ } }
+const VERDICTS = new Set(["moins", "plus", "marche", "seul", "mieux", "moins-bien", "variante"]);
+const numOrNull = v => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
+const cleanCmp = c => ({
+  verdict: VERDICTS.has(c?.verdict) ? c.verdict : "variante", n: int(c?.n), hdvN: int(c?.hdvN),
+  med: numOrNull(c?.med), min: numOrNull(c?.min), max: numOrNull(c?.max), hdvMin: numOrNull(c?.hdvMin), ref: numOrNull(c?.ref),
+});
+
+// Ce que chaque page doit charger depuis l'API
+const NEEDS = { accueil: ["shops", "players"], prix: ["shops"], carte: ["shops"], equipe: ["players"], gestion: ["shops", "players"] };
+async function loadShopData(useCache) {
+  const c = useCache && cacheGet("shops");
+  if (c) {
+    S.base = (Array.isArray(c.base) ? c.base : []).map(s => ({ ...cleanShop(s), sector: txt(s?.sector, 40) || "Hors secteur", cmp: cleanCmp(s?.cmp) }));
+    S.refreshed = c.refreshed ?? null;
+    return;
+  }
+  await Promise.all([loadShops(), loadMarket().catch(() => { S.market = []; })]);
+  computeBase();
+  cacheSet("shops", { base: S.base, refreshed: S.refreshed });
+}
+async function loadPlayerData(useCache) {
+  const c = useCache && cacheGet("players");
+  if (c && typeof c === "object") S.players = c;
+  else { await loadPlayers(); cacheSet("players", S.players); }
+  S.playersLoaded = true;
 }
 
 async function loadAll(first) {
+  const need = NEEDS[PAGE] || [];
   try {
-    await Promise.all([loadShops(), loadMarket().catch(() => { S.market = []; }), loadPlayers(), loadItems().catch(console.error)]);
+    await Promise.all([
+      loadItems().catch(console.error),
+      need.includes("shops") ? loadShopData(first) : null,
+      need.includes("players") ? loadPlayerData(first) : null,
+    ]);
     enrich();
-    renderAll(first);
+    renderAll();
   } catch (err) {
     console.error(err);
-    if (first) $("#shopList").innerHTML = `<div class="empty panel">Impossible de joindre l'API VikingCraft pour l'instant.<br><br><button class="btn" id="retry" type="button">Réessayer</button></div>`;
-    $("#retry")?.addEventListener("click", () => { $("#shopList").innerHTML = `<p class="loading">Chargement des shops…</p>`; loadAll(true); });
+    if (!first) return;
+    const box = $("#shopList") || $("#deals") || $("#team") || $("#dash");
+    if (!box) return;
+    box.innerHTML = `<div class="empty panel">Impossible de joindre l'API VikingCraft pour l'instant.<br><br><button class="btn" id="retry" type="button">Réessayer</button></div>`;
+    $("#retry").addEventListener("click", () => { box.innerHTML = `<p class="loading">Chargement…</p>`; loadAll(true); });
   }
 }
 
-function renderAll(first) {
-  renderHeroStats();
-  renderFilters();
-  renderShops();
+function renderAll() {
+  if ($("#stShops")) renderHeroStats();
+  if ($("#shopList")) { renderFilters(); renderShops(); }
+  if ($("#deals")) renderDeals();
+  if ($("#team")) renderTeam();
+  if ($("#teamPeek")) renderTeamPeek();
+  if ($("#map")) { if (map) renderMap(); else initMap(); }
   renderCart();
-  renderTeam();
-  renderMap();
-  if (staffUnlocked()) { renderDash(); if (!E.dirty) renderEditor(); }
-  const t = S.refreshed ? new Date(S.refreshed) : new Date();
-  $("#shopsUpdated").textContent = `Mis à jour à ${t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`;
-  if (first && location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+  if (PAGE === "gestion" && staffUnlocked()) { renderDash(); if (!E.dirty) renderEditor(); }
+  const up = $("#shopsUpdated");
+  if (up && S.base.length) {
+    const t = S.refreshed ? new Date(S.refreshed) : new Date();
+    up.textContent = `Mis à jour à ${t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`;
+  }
 }
 
 // ---------- Accueil ----------
 function renderWarps() {
+  if (!$("#warps")) return;
   $("#warps").innerHTML = C.warps.map(w =>
     `<button class="cmd" type="button" data-copy="${esc(w.commande)}"><div><code>${esc(w.commande)}</code><span>${esc(w.texte)} · cliquer pour copier</span></div></button>`).join("");
 }
@@ -328,21 +389,24 @@ function renderHeroStats() {
   $("#stShops").textContent = num(S.ours.filter(s => s.remainingStock > 0).length);
   $("#stStock").textContent = num(sells.reduce((a, s) => a + s.remainingStock, 0));
   const online = C.fondateurs.filter(f => S.players[f.pseudo]?.seen?.online).length;
-  $("#stOnline").textContent = `${online} / ${C.fondateurs.length}`;
+  $("#stOnline").textContent = S.playersLoaded ? `${online} / ${C.fondateurs.length}` : "…";
   $("#stCheap").textContent = num(sells.filter(s => s.cmp.verdict === "moins" && s.remainingStock > 0).length);
 }
 
 // ---------- Zones ----------
 function renderZones() {
-  $("#zonesGrid").innerHTML = C.zones.map((z, i) => `
+  const grid = $("#zonesGrid");
+  if (!grid) return;
+  const limit = int(grid.dataset.limit) || C.zones.length;
+  grid.innerHTML = C.zones.slice(0, limit).map((z, i) => `
     <figure class="zone panel" tabindex="0" data-zone="${i}">
-      <img src="${esc(z.image)}" alt="${esc(z.titre)}" loading="lazy">
+      <img src="${esc(asset(z.image))}" alt="${esc(z.titre)}" loading="lazy">
       <figcaption><h3>${esc(z.titre)}</h3><p>${esc(z.texte)}</p></figcaption>
     </figure>`).join("");
 }
 function openZone(i) {
   const z = C.zones[i], dlg = $("#lightbox");
-  $("#lbImg").src = z.image; $("#lbImg").alt = z.titre;
+  $("#lbImg").src = asset(z.image); $("#lbImg").alt = z.titre;
   $("#lbCap").textContent = `${z.titre} — ${z.texte}`;
   dlg.showModal();
 }
@@ -434,34 +498,79 @@ function renderShops() {
 }
 function refreshList() { renderFilters(); renderShops(); }
 
+// ---------- Aperçus de l'accueil ----------
+function renderDeals() {
+  const sells = S.ours.filter(s => s.type === "sell" && s.remainingStock > 0);
+  const score = s => (s.cmp.verdict === "seul" ? 0.5 : s.cmp.ref ? unit(s) / s.cmp.ref : 1);   // plus c'est bas, meilleure est l'affaire
+  let list = sells.filter(s => s.cmp.verdict === "moins" || s.cmp.verdict === "seul").sort((a, b) => score(a) - score(b));
+  if (list.length < 4) list = [...list, ...sells.filter(s => !list.includes(s)).sort((a, b) => b.remainingStock - a.remainingStock)];
+  $("#deals").innerHTML = list.length ? list.slice(0, 4).map(shopCard).join("") : `<p class="empty panel">Aucun shop en stock pour l'instant.</p>`;
+}
+function renderTeamPeek() {
+  $("#teamPeek").innerHTML = C.fondateurs.map(f => {
+    const p = S.players[f.pseudo], online = !!p?.seen?.online;
+    const cmd = online ? `/msg ${f.pseudo} ` : `/mail ${f.pseudo} `;
+    return `
+    <div class="peek-member panel">
+      ${head(f.pseudo, 48)}
+      <div class="peek-who"><b>${esc(f.pseudo)}</b>
+        <div class="online"><span class="dot${online ? " on" : ""}"></span>${p ? (online ? "En ligne" : `Vu ${ago(p.seen?.lastSeenSecondsAgo ?? 0)}`) : "Profil introuvable"}</div>
+      </div>
+      <button class="cmdline" type="button" data-copy="${esc(cmd)}" title="Copier la commande"><span>${esc(cmd)}…</span><small>copier</small></button>
+    </div>`;
+  }).join("");
+}
+function refreshCards() {
+  if ($("#shopList")) renderShops();
+  if ($("#deals")) renderDeals();
+}
+
 // ---------- Panier ----------
 function saveCart() { store.set("wc_cart", S.cart); }
+// Chaque ligne garde un instantané (nom, prix…) pour s'afficher aussi sur les pages sans liste des prix
+function loadCart() {
+  const out = {};
+  for (const [id, v] of Object.entries(store.get("wc_cart", {}) || {})) {
+    if (typeof v === "number") { if (v > 0) out[String(id)] = { q: int(v) }; continue; }   // ancien format
+    if (!v || typeof v !== "object" || !(int(v.q) > 0)) continue;
+    out[String(id)] = { q: int(v.q), n: txt(v.n, 64), m: cleanMaterial(v.m), u: Math.max(0, Number(v.u) || 0), o: txt(v.o, 32), max: Math.max(1, int(v.max)) };
+  }
+  return out;
+}
+const snap = (s, q) => ({ q, n: s.name, m: s.material, u: unit(s), o: s.ownerName, max: Math.max(1, s.remainingStock) });
 function addToCart(id) {
   const s = S.ours.find(x => x.id === id); if (!s) return;
   if (S.cart[id]) { delete S.cart[id]; toast(`${s.name} retiré du panier`); }
-  else { S.cart[id] = Math.min(64 * (s.stackAmount || 1), s.remainingStock); toast(`${s.name} ajouté au panier`); }
-  saveCart(); renderCart(); renderShops();
+  else { S.cart[id] = snap(s, Math.min(64 * (s.stackAmount || 1), s.remainingStock)); toast(`${s.name} ajouté au panier`); }
+  saveCart(); renderCart(); refreshCards();
 }
-function cartLines() {
-  return Object.entries(S.cart).map(([id, qty]) => ({ s: S.ours.find(x => x.id === id), qty })).filter(l => l.s);
+// Avec des données fraîches : prix et stocks à jour, shops disparus oubliés
+function syncCart() {
+  if (!S.base.length) return;
+  for (const [id, l] of Object.entries(S.cart)) {
+    const s = S.ours.find(x => x.id === id);
+    if (s) S.cart[id] = snap(s, Math.min(l.q, Math.max(1, s.remainingStock)));
+    else delete S.cart[id];
+  }
+  saveCart();
 }
+const cartLines = () => Object.entries(S.cart).filter(([, l]) => l.n).map(([id, l]) => ({ id, ...l }));
 function renderCart() {
+  syncCart();
   const lines = cartLines();
-  // on oublie les shops qui ont disparu
-  if (S.ours.length && lines.length !== Object.keys(S.cart).length) { S.cart = Object.fromEntries(lines.map(l => [l.s.id, l.qty])); saveCart(); }
   $("#cartCount").textContent = lines.length;
-  $("#cartItems").innerHTML = lines.length ? lines.map(({ s, qty }) => `
+  $("#cartItems").innerHTML = lines.length ? lines.map(l => `
     <div class="cart-line">
-      <span class="slot">${icon(s.material)}</span>
-      <div class="nm">${esc(s.name)}<small>${money(unit(s))} l'unité · ${esc(s.ownerName)}</small></div>
-      <input type="number" min="1" max="${s.remainingStock}" value="${int(qty)}" data-qty="${esc(s.id)}" aria-label="Quantité de ${esc(s.name)}">
-    </div>`).join("") : `<p class="hint">Ton panier est vide. Ajoute des items depuis la liste des prix.</p>`;
-  $("#cartTotal").textContent = money(lines.reduce((a, l) => a + unit(l.s) * l.qty, 0));
+      <span class="slot">${icon(l.m)}</span>
+      <div class="nm">${esc(l.n)}<small>${money(l.u)} l'unité · ${esc(l.o)}</small></div>
+      <input type="number" min="1" max="${l.max}" value="${int(l.q)}" data-qty="${esc(l.id)}" aria-label="Quantité de ${esc(l.n)}">
+    </div>`).join("") : `<p class="hint">Ton panier est vide. Ajoute des items depuis <a href="/prix/">la liste des prix</a>.</p>`;
+  $("#cartTotal").textContent = money(lines.reduce((a, l) => a + l.u * l.q, 0));
 }
 function cartText() {
   const lines = cartLines();
-  const total = lines.reduce((a, l) => a + unit(l.s) * l.qty, 0);
-  return [`Commande Warp Cash :`, ...lines.map(l => `- ${num(l.qty)} × ${l.s.name} (${money(unit(l.s))}) = ${money(unit(l.s) * l.qty)}`), `Total : ${money(total)}`].join("\n");
+  const total = lines.reduce((a, l) => a + l.u * l.q, 0);
+  return [`Commande Warp Cash :`, ...lines.map(l => `- ${num(l.q)} × ${l.n} (${money(l.u)}) = ${money(l.u * l.q)}`), `Total : ${money(total)}`].join("\n");
 }
 
 // ---------- Carte ----------
@@ -666,13 +775,10 @@ window.warpCash = {
   },
 };
 function showStaff() {
-  const on = location.hash === "#gestion";
-  $("#gestion").hidden = !on;
-  if (!on) return;
+  if (PAGE !== "gestion") return;
   const ok = staffUnlocked();
   $("#lockForm").hidden = ok; $("#dash").hidden = !ok; $("#editor").hidden = !ok;
   if (ok) { renderDash(); renderEditor(); } else setTimeout(() => $("#pw").focus(), 50);
-  $("#gestion").scrollIntoView();
 }
 function renderDash() {
   if (!S.ours.length) { $("#dash").innerHTML = `<p class="loading">Chargement…</p>`; return; }
@@ -851,7 +957,7 @@ async function edSave() {
     if (!r.ok) throw new Error(`GitHub répond ${r.status}.`);
     S.items = data; S.itemsLock = Date.now() + 5 * 60e3;
     E.dirty = false;
-    enrich(); refreshList(); renderDash(); renderEditor();
+    enrich(); renderDash(); renderEditor();
     msg("Enregistré ! Visible pour tout le monde dans 1 à 2 minutes."); $("#edState").classList.add("ok");
     toast("Enregistré sur le site");
   } catch (err) {
@@ -888,23 +994,18 @@ function bindEditor() {
   window.addEventListener("beforeunload", e => { if (E.dirty && staffUnlocked()) e.preventDefault(); });
 }
 
-// ---------- Navigation : lien actif ----------
-function watchSections() {
-  const links = [...document.querySelectorAll("#nav a, #rail a")];
-  const io = new IntersectionObserver(entries => {
-    for (const e of entries) if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
-  }, { rootMargin: "-45% 0px -50% 0px" });
-  document.querySelectorAll("main > section").forEach(s => io.observe(s));
-  // carte et classements : chargés seulement quand on s'en approche
-  const lazy = new IntersectionObserver(entries => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      if (e.target.id === "carte") initMap();
-      if (e.target.id === "classements") loadBoards();
-      lazy.unobserve(e.target);
-    }
-  }, { rootMargin: "300px 0px" });
-  lazy.observe($("#carte")); lazy.observe($("#classements"));
+// ---------- Menu ☰ (téléphone) ----------
+function bindMenu() {
+  const bar = $("#topbar"), btn = $("#menuBtn");
+  if (!bar || !btn) return;
+  const set = open => {
+    bar.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+    btn.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+  };
+  btn.addEventListener("click", () => set(!bar.classList.contains("open")));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+  document.addEventListener("click", e => { if (!bar.contains(e.target)) set(false); });
 }
 
 // ---------- Événements ----------
@@ -924,25 +1025,24 @@ function bind() {
       S.view.mode = t.dataset.mode; refreshList();
     }
   });
-  $("#zonesGrid").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.zone) openZone(+e.target.dataset.zone); });
-  $("#q").addEventListener("input", e => { S.view.q = e.target.value; refreshList(); });
-  $("#hideEmpty").addEventListener("change", e => { S.view.hideEmpty = e.target.checked; refreshList(); });
+  $("#zonesGrid")?.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.zone) openZone(+e.target.dataset.zone); });
+  $("#q")?.addEventListener("input", e => { S.view.q = e.target.value; refreshList(); });
+  $("#hideEmpty")?.addEventListener("change", e => { S.view.hideEmpty = e.target.checked; refreshList(); });
 
   $("#cartBtn").addEventListener("click", () => { $("#cart").hidden = !$("#cart").hidden; });
   $("#cartClose").addEventListener("click", () => { $("#cart").hidden = true; });
-  $("#cartClear").addEventListener("click", () => { S.cart = {}; saveCart(); renderCart(); renderShops(); });
+  $("#cartClear").addEventListener("click", () => { S.cart = {}; saveCart(); renderCart(); refreshCards(); });
   $("#cartCopy").addEventListener("click", () => cartLines().length ? copy(cartText(), "Liste") : toast("Le panier est vide"));
   $("#cartItems").addEventListener("change", e => {
-    const id = e.target.dataset.qty; if (!id) return;
-    const s = S.ours.find(x => x.id === id);
-    const v = Math.max(1, Math.min(s ? s.remainingStock : 1, Math.round(+e.target.value || 1)));
-    S.cart[id] = v; e.target.value = v; saveCart(); renderCart();
+    const l = S.cart[e.target.dataset.qty]; if (!l) return;
+    const v = Math.max(1, Math.min(l.max || 1, Math.round(+e.target.value || 1)));
+    l.q = v; e.target.value = v; saveCart(); renderCart();
   });
 
   $("#lbClose").addEventListener("click", () => $("#lightbox").close());
   $("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").close(); });
 
-  $("#lockForm").addEventListener("submit", async e => {
+  $("#lockForm")?.addEventListener("submit", async e => {
     e.preventDefault();
     if (!window.crypto?.subtle) { $("#pwErr").textContent = "Ouvre le site en https pour te connecter."; $("#pwErr").hidden = false; return; }
     const mdp = C.motDePasse, btn = e.submitter;
@@ -954,18 +1054,22 @@ function bind() {
       $("#pw").value = ""; $("#pwErr").hidden = true; showStaff();
     } else { $("#pwErr").hidden = false; }
   });
-  window.addEventListener("hashchange", showStaff);
-  bindEditor();
+  if (PAGE === "gestion") bindEditor();
 }
 
 // ---------- Démarrage ----------
+S.cart = loadCart();
 loadSkins();
 renderWarps();
 renderZones();
 bind();
-watchSections();
+bindMenu();
 showStaff();
-loadAll(true);
-setInterval(() => { if (!document.hidden) loadAll(false); }, 180e3);
+renderCart();
+if (PAGE === "classements") loadBoards();
+if (NEEDS[PAGE]) {
+  loadAll(true);
+  setInterval(() => { if (!document.hidden) loadAll(false); }, 180e3);
+}
 
 })();

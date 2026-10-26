@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
+<!-- Page générée par outils/construire.py : modifier outils/pages/accueil.html puis relancer le script. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net https://vkanalyzer.nexsarum.dev https://cdnjs.cloudflare.com; connect-src 'self' https://api.vikingcraft.fr https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self'">
@@ -8,7 +9,6 @@
 <title>Warp Cash VikingCraft – shops de GambaleSempai et shadowyahit</title>
 <meta name="description" content="Le warp Cash sur VikingCraft FR (/warp cash) : les shops et fermes de GambaleSempai et shadowyahit, avec prix et stocks en direct.">
 <link rel="canonical" href="https://warpcashvk.github.io/">
-<meta name="theme-color" content="#c6f548">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Warp Cash – VikingCraft FR">
 <meta property="og:locale" content="fr_FR">
@@ -23,6 +23,7 @@
 <meta name="twitter:title" content="Warp Cash VikingCraft – shops de GambaleSempai et shadowyahit">
 <meta name="twitter:description" content="Le warp Cash sur VikingCraft FR (/warp cash) : les shops et fermes de GambaleSempai et shadowyahit, avec prix et stocks en direct.">
 <meta name="twitter:image" content="https://warpcashvk.github.io/img/og.jpg">
+<meta name="theme-color" content="#c6f548">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -43,14 +44,8 @@
       "url": "https://warpcashvk.github.io/",
       "logo": "https://warpcashvk.github.io/img/og.jpg",
       "founder": [
-        {
-          "@type": "Person",
-          "name": "GambaleSempai"
-        },
-        {
-          "@type": "Person",
-          "name": "shadowyahit"
-        }
+        { "@type": "Person", "name": "GambaleSempai" },
+        { "@type": "Person", "name": "shadowyahit" }
       ]
     }
   ]
@@ -60,46 +55,37 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Pixelify+Sans:wght@700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="css/style.css?v=7">
-<script src="js/theme.js?v=3"></script>
+<link rel="stylesheet" href="/css/style.css?v=8">
+<script src="/js/theme.js?v=8"></script>
 </head>
-<body>
+<body data-page="accueil">
 
-<header class="topbar">
-  <a class="brand" href="#accueil">
+<header class="topbar" id="topbar">
+  <a class="brand" href="/">
     <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/emerald.png" alt="">
     <span>Warp Cash</span>
   </a>
-  <nav class="nav" id="nav">
-    <a href="#accueil">Accueil</a>
-    <a href="#zones">Zones</a>
-    <a href="#shops">Prix</a>
-    <a href="#carte">Carte</a>
-    <a href="#equipe">Équipe</a>
-    <a href="#classements">Classements</a>
-    <a href="guide/">Guide</a>
+  <nav class="nav" id="nav" aria-label="Menu">
+    <a href="/" class="on" aria-current="page">Accueil</a>
+    <a href="/zones/">Zones</a>
+    <a href="/prix/">Prix</a>
+    <a href="/carte/">Carte</a>
+    <a href="/equipe/">Équipe</a>
+    <a href="/classements/">Classements</a>
+    <a href="/guide/">Guide</a>
   </nav>
   <button class="btn btn-sm btn-accent cart-toggle" id="cartBtn" type="button" aria-controls="cart">
     <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/bundle.png" alt="">
-    Panier <b id="cartCount">0</b>
+    <span class="cart-label">Panier</span> <b id="cartCount">0</b>
+  </button>
+  <button class="menu-btn" id="menuBtn" type="button" aria-controls="nav" aria-expanded="false" aria-label="Ouvrir le menu">
+    <span></span><span></span><span></span>
   </button>
 </header>
 
-<!-- Rail de sections (grand écran) -->
-<nav class="rail" id="rail" aria-label="Sections">
-  <a href="#accueil">Accueil</a>
-  <a href="#zones">Zones</a>
-  <a href="#shops">Prix</a>
-  <a href="#carte">Carte</a>
-  <a href="#equipe">Équipe</a>
-  <a href="#classements">Rangs</a>
-</nav>
+<main id="main">
 
-<main>
-
-  <!-- ============ ACCUEIL ============ -->
-  <section id="accueil" class="hero">
+  <section class="hero">
     <div class="hero-card">
       <div class="hero-inner">
         <p class="over">VikingCraft FR · Shops &amp; fermes</p>
@@ -112,14 +98,14 @@
         <div class="warps" id="warps"></div>
 
         <div class="hero-cta">
-          <a class="btn btn-accent" href="#shops">Voir les prix</a>
-          <a class="btn" href="#zones">Visiter les zones</a>
-          <a class="btn" href="guide/">📖 Comment ça marche ?</a>
+          <a class="btn btn-accent" href="/prix/">Voir les prix</a>
+          <a class="btn" href="/zones/">Visiter les zones</a>
+          <a class="btn" href="/guide/">📖 Comment ça marche ?</a>
         </div>
       </div>
 
-      <a class="hero-peek" href="#zones" aria-label="Visiter les zones">
-        <img src="img/zones/canne.webp" alt="">
+      <a class="hero-peek" href="/zones/" aria-label="Visiter les zones">
+        <img src="/img/zones/canne.webp" alt="">
         <span class="play" aria-hidden="true">▶</span>
         <b>VISITE</b>
       </a>
@@ -133,106 +119,61 @@
     </div>
   </section>
 
-  <!-- ============ ZONES ============ -->
-  <section id="zones" class="section">
+  <section class="section">
     <div class="wrap">
-      <p class="over">Le warp</p>
-      <h2 class="h2">Visite des zones</h2>
-      <p class="lead">Un tour du warp en images. Clique sur une photo pour l'agrandir.</p>
-      <div class="zones" id="zonesGrid"></div>
-    </div>
-  </section>
-
-  <!-- ============ SHOPS ============ -->
-  <section id="shops" class="section">
-    <div class="wrap">
-      <p class="over">Le shop</p>
-      <h2 class="h2">Liste des prix</h2>
-      <p class="lead">En direct depuis l'API VikingCraft. <span class="muted" id="shopsUpdated"></span></p>
-
-      <div class="toolbar panel" id="toolbar">
-        <div class="seg" role="tablist">
-          <button class="seg-btn on" data-mode="sell" role="tab" type="button">On vend <small id="nSell"></small></button>
-          <button class="seg-btn" data-mode="buy" role="tab" type="button">On rachète <small id="nBuy"></small></button>
-        </div>
-        <input class="field" id="q" type="search" placeholder="Chercher un item…" autocomplete="off">
-        <div class="sorts" role="group" aria-label="Trier">
-          <button class="chip on" type="button" data-sort="nom">A–Z</button>
-          <button class="chip" type="button" data-sort="prix">Prix ↑</button>
-          <button class="chip" type="button" data-sort="prix-desc">Prix ↓</button>
-          <button class="chip" type="button" data-sort="stock">Stock</button>
-        </div>
-        <label class="check"><input type="checkbox" id="hideEmpty"> Masquer les ruptures</label>
-        <div class="chips" id="cats" role="group" aria-label="Catégories"></div>
+      <div class="peek-head">
+        <div><p class="over">Le shop</p><h2 class="h2">Les bonnes affaires</h2></div>
+        <a class="btn" href="/prix/">Tous les prix →</a>
       </div>
+      <p class="lead">Ce que personne d'autre sur le serveur ne vend moins cher, en direct. <span class="muted" id="shopsUpdated"></span></p>
+      <div class="cards" id="deals"><p class="loading">Chargement des shops…</p></div>
+    </div>
+  </section>
 
-      <p class="hint" id="modeHint"></p>
-      <div class="shop-list" id="shopList"><p class="loading">Chargement des shops…</p></div>
-
-      <div class="legend">
-        <span class="badge b-cheap">Moins cher du serveur</span> personne ne vend moins cher, ni en shop ni à l'hôtel des ventes.
-        <span class="badge b-only">Exclusif</span> personne d'autre ne le vend en ce moment.
-        <span class="badge b-best">Meilleur rachat</span> on rachète plus cher que les autres shops.
+  <section class="section">
+    <div class="wrap">
+      <div class="peek-head">
+        <div><p class="over">Le warp</p><h2 class="h2">Visite des zones</h2></div>
+        <a class="btn" href="/zones/">Toutes les zones →</a>
       </div>
+      <div class="zones" id="zonesGrid" data-limit="3"></div>
     </div>
   </section>
 
-  <!-- ============ CARTE ============ -->
-  <section id="carte" class="section">
+  <section class="section">
     <div class="wrap">
-      <p class="over">Où nous trouver</p>
-      <h2 class="h2">Carte des shops</h2>
-      <p class="lead">Tous nos shops sur la carte du Continent. Zoome pour séparer les shops d'un même secteur.</p>
-      <div class="map-frame panel"><div id="map"></div></div>
-      <p class="credit">Terrain : <a href="https://vkanalyzer.nexsarum.dev" target="_blank" rel="noopener">VkAnalyzer</a>, une carte faite par un joueur.</p>
+      <div class="peek-head">
+        <div><p class="over">Les fondateurs</p><h2 class="h2">L'équipe</h2></div>
+        <a class="btn" href="/equipe/">Nous contacter →</a>
+      </div>
+      <div class="team-peek" id="teamPeek"></div>
     </div>
   </section>
 
-  <!-- ============ ÉQUIPE ============ -->
-  <section id="equipe" class="section">
-    <div class="wrap">
-      <p class="over">Les fondateurs</p>
-      <h2 class="h2">L'équipe</h2>
-      <p class="lead">Le warp Cash est tenu par GambaleSempai et shadowyahit, deux joueurs de VikingCraft. Une question, une commande en gros, un souci avec un shop ? Écris-nous.</p>
-      <div class="team" id="team"></div>
-      <div class="contact panel" id="contact"></div>
-    </div>
-  </section>
-
-  <!-- ============ CLASSEMENTS ============ -->
-  <section id="classements" class="section">
-    <div class="wrap">
-      <p class="over">Top serveur</p>
-      <h2 class="h2">Nos classements</h2>
-      <p class="lead">Là où on apparaît dans le top 100 des classements publics du serveur.</p>
-      <div class="progress" id="lbProgress" hidden><div class="progress-bar" id="lbBar"></div><span id="lbText"></span></div>
-      <div class="boards" id="boards"></div>
-    </div>
-  </section>
-
-  <!-- ============ GESTION (cachée) ============ -->
-  <section id="gestion" class="section" hidden>
-    <div class="wrap">
-      <p class="over">Accès réservé</p>
-      <h2 class="h2">Espace équipe</h2>
-      <form class="lock panel" id="lockForm">
-        <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/trial_key.png" alt="">
-        <label for="pw">Mot de passe</label>
-        <input class="field" id="pw" type="password" autocomplete="current-password">
-        <button class="btn" type="submit">Entrer</button>
-        <p class="err" id="pwErr" hidden>Mauvais mot de passe.</p>
-      </form>
-      <div id="dash" hidden></div>
-      <div id="editor" hidden></div>
+  <section class="section">
+    <div class="wrap quick">
+      <a class="quick-card panel" href="/carte/">
+        <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/map.png" alt="">
+        <b>Carte des shops</b><span>Tous nos coffres sur la carte du Continent</span>
+      </a>
+      <a class="quick-card panel" href="/classements/">
+        <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/gold_ingot.png" alt="">
+        <b>Nos classements</b><span>Là où on est dans le top 100 du serveur</span>
+      </a>
+      <a class="quick-card panel" href="/guide/">
+        <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/writable_book.png" alt="">
+        <b>Guide du joueur</b><span>Venir, acheter, nous vendre tes items</span>
+      </a>
     </div>
   </section>
 
 </main>
 
 <footer class="footer">
+  <p class="footer-nav"><a href="/">Accueil</a> · <a href="/zones/">Zones</a> · <a href="/prix/">Prix</a> · <a href="/carte/">Carte</a> · <a href="/equipe/">Équipe</a> · <a href="/classements/">Classements</a> · <a href="/guide/">Guide</a></p>
   <p>Site fait par et pour le warp Cash · non officiel · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
   <p class="muted">Minecraft et ses textures © Mojang. Carte : VkAnalyzer.</p>
-  <p><a href="#gestion" class="staff-link">Espace équipe</a></p>
+  <p><a href="/gestion/" class="staff-link">Espace équipe</a></p>
 </footer>
 
 <!-- Panier -->
@@ -261,8 +202,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/app.js?v=4"></script>
+<script src="/js/config.js?v=8"></script>
+<script src="/js/app.js?v=8"></script>
 </body>
 </html>

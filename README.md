@@ -8,7 +8,9 @@ rien à mettre à jour à la main quand vous changez un shop en jeu.
 
 | Fichier | À quoi il sert |
 |---|---|
-| `index.html` | La page |
+| `index.html`, `prix/`, `zones/`, `carte/`, `equipe/`, `classements/`, `guide/`, `gestion/` | Les pages (générées, ne pas modifier à la main) |
+| `outils/pages/` | Le contenu de chaque page |
+| `outils/construire.py` | Fabrique les pages : menu, en-tête, pied de page, sitemap |
 | `css/style.css` | Le design |
 | `js/config.js` | **Le fichier à modifier au quotidien** : textes des zones, Discord, skins, mot de passe |
 | `data/items.json` | Catégories, notes et promos des items (modifiables depuis l'Espace équipe) |
@@ -87,9 +89,24 @@ puis ouvrez http://localhost:8765.
 Le site est publié sur **https://warpcashvk.github.io** (GitHub Pages, dépôt `warpcashvk/warpcashvk.github.io`).
 Chaque modification envoyée sur la branche `main` apparaît sur le site en une à deux minutes.
 
+## Les pages
+
+Le site a une page par rubrique : accueil (`/`), prix (`/prix/`), zones, carte, équipe, classements,
+guide et Espace équipe (`/gestion/`, non référencée sur Google).
+Le menu, l'en-tête et le pied de page sont communs : ils sont écrits une seule fois dans `outils/construire.py`.
+
+Pour modifier le texte d'une page, éditez son fichier dans `outils/pages/`, puis régénérez :
+
+```
+python outils/construire.py
+```
+
+Le script réécrit les `index.html` de chaque dossier et `sitemap.xml`.
+Pour ajouter une page : un fichier dans `outils/pages/`, une ligne dans `PAGES` et dans `MENU`.
+
 Les navigateurs gardent les fichiers en cache. Après une modification de `css/` ou `js/`,
-augmentez le numéro de version dans `index.html` et `guide/index.html`
-(`style.css?v=3` → `?v=4`, pareil pour les `.js`) pour que tout le monde voie la nouvelle version tout de suite.
+augmentez `VERSION` en haut de `outils/construire.py` puis relancez le script :
+tout le monde verra la nouvelle version tout de suite.
 
 ## Crédits
 

@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="fr">
 <head>
+<!-- Page générée par outils/construire.py : modifier outils/pages/guide.html puis relancer le script. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net https://vkanalyzer.nexsarum.dev https://cdnjs.cloudflare.com; connect-src 'self' https://api.vikingcraft.fr https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Guide du joueur – Warp Cash VikingCraft</title>
 <meta name="description" content="Venir au warp Cash (/warp cash), acheter et vendre sur les shops de GambaleSempai et shadowyahit, les retrouver avec /market : le guide du joueur sur VikingCraft FR.">
 <link rel="canonical" href="https://warpcashvk.github.io/guide/">
-<meta name="theme-color" content="#c6f548">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Warp Cash – VikingCraft FR">
 <meta property="og:locale" content="fr_FR">
@@ -23,31 +23,41 @@
 <meta name="twitter:title" content="Guide du joueur – Warp Cash VikingCraft">
 <meta name="twitter:description" content="Venir au warp Cash (/warp cash), acheter et vendre sur les shops de GambaleSempai et shadowyahit, les retrouver avec /market : le guide du joueur sur VikingCraft FR.">
 <meta name="twitter:image" content="https://warpcashvk.github.io/img/og.jpg">
+<meta name="theme-color" content="#c6f548">
 <link rel="icon" href="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/emerald.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
-<link rel="stylesheet" href="../css/style.css?v=7">
-<script src="../js/theme.js?v=3"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Pixelify+Sans:wght@700&display=swap">
+<link rel="stylesheet" href="/css/style.css?v=8">
+<script src="/js/theme.js?v=8"></script>
 </head>
-<body>
+<body data-page="guide">
 
-<header class="topbar">
-  <a class="brand" href="../">
+<header class="topbar" id="topbar">
+  <a class="brand" href="/">
     <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/emerald.png" alt="">
     <span>Warp Cash</span>
   </a>
-  <nav class="nav">
-    <a href="../">Accueil</a>
-    <a href="../#zones">Zones</a>
-    <a href="../#shops">Prix</a>
-    <a href="../#carte">Carte</a>
-    <a href="../#equipe">Équipe</a>
-    <a href="./" class="on" aria-current="page">Guide</a>
+  <nav class="nav" id="nav" aria-label="Menu">
+    <a href="/">Accueil</a>
+    <a href="/zones/">Zones</a>
+    <a href="/prix/">Prix</a>
+    <a href="/carte/">Carte</a>
+    <a href="/equipe/">Équipe</a>
+    <a href="/classements/">Classements</a>
+    <a href="/guide/" class="on" aria-current="page">Guide</a>
   </nav>
+  <button class="btn btn-sm btn-accent cart-toggle" id="cartBtn" type="button" aria-controls="cart">
+    <img src="https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/bundle.png" alt="">
+    <span class="cart-label">Panier</span> <b id="cartCount">0</b>
+  </button>
+  <button class="menu-btn" id="menuBtn" type="button" aria-controls="nav" aria-expanded="false" aria-label="Ouvrir le menu">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
-<main class="guide">
+<main id="main" class="guide">
+
   <section class="guide-hero wrap">
     <p class="over">Guide du joueur</p>
     <h1 class="h2">Comment ça marche ? 🤔</h1>
@@ -67,10 +77,6 @@
     <div class="cmd-grid">
       <button class="cmd" type="button" data-copy="/warp cash"><div><code>/warp cash</code><span>Le warp principal · cliquer pour copier</span></div></button>
       <button class="cmd" type="button" data-copy="/warp cash_ferme"><div><code>/warp cash_ferme</code><span>Les fermes · cliquer pour copier</span></div></button>
-    </div>
-    <div class="callout">
-      <b>🤫 Le passage secret</b>
-      <p>Devant les panneaux <i>« Snick pour rentrer »</i>, accroupis-toi (touche <kbd>Maj</kbd> par défaut) pour passer.</p>
     </div>
     <p class="tip-line">💡 Tu ne te souviens plus du nom ? <code>/warp</code> ouvre le menu de tous les warps du serveur.</p>
   </section>
@@ -134,18 +140,47 @@
     <div class="callout cta">
       <b>💬 Une question, une commande en gros ?</b>
       <p>Si on est en ligne : <code>/msg GambaleSempai</code> ou <code>/msg shadowyahit</code>. Sinon : <code>/mail pseudo message</code>, on le lira à la connexion.</p>
-      <p><a class="btn btn-accent" href="../#equipe">Voir qui est en ligne</a></p>
+      <p><a class="btn btn-accent" href="/equipe/">Voir qui est en ligne</a></p>
     </div>
     <p class="credit">Infos de jeu tirées du <a href="https://vikingcraft.fr/docs/gameplay/market" target="_blank" rel="noopener">wiki officiel VikingCraft</a>.</p>
   </section>
+
 </main>
 
 <footer class="footer">
-  <p>Site fait par et pour le warp Cash · non officiel</p>
-  <p class="muted">Minecraft © Mojang.</p>
+  <p class="footer-nav"><a href="/">Accueil</a> · <a href="/zones/">Zones</a> · <a href="/prix/">Prix</a> · <a href="/carte/">Carte</a> · <a href="/equipe/">Équipe</a> · <a href="/classements/">Classements</a> · <a href="/guide/">Guide</a></p>
+  <p>Site fait par et pour le warp Cash · non officiel · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
+  <p class="muted">Minecraft et ses textures © Mojang. Carte : VkAnalyzer.</p>
+  <p><a href="/gestion/" class="staff-link">Espace équipe</a></p>
 </footer>
 
+<!-- Panier -->
+<aside class="cart panel" id="cart" hidden aria-label="Panier">
+  <div class="cart-head">
+    <h3>Panier</h3>
+    <button class="btn btn-sm" id="cartClose" type="button" aria-label="Fermer">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="cart-total">Total : <b id="cartTotal">0</b></div>
+    <div class="cart-actions">
+      <button class="btn btn-sm" id="cartCopy" type="button">Copier la liste</button>
+      <button class="btn btn-sm" id="cartClear" type="button">Vider</button>
+    </div>
+    <p class="hint">Le paiement se fait en jeu, directement sur chaque shop.</p>
+  </div>
+</aside>
+
+<!-- Agrandissement des photos -->
+<dialog class="lightbox" id="lightbox">
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+  <button class="btn btn-sm" id="lbClose" type="button">Fermer</button>
+</dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="../js/guide.js?v=3"></script>
+
+<script src="/js/config.js?v=8"></script>
+<script src="/js/app.js?v=8"></script>
 </body>
 </html>
