@@ -430,3 +430,28 @@ select.field { cursor: pointer; }
   .section { padding-top: 64px; }
   .cart { top: 128px; max-height: calc(100vh - 144px); }
 }
+
+/* ---------- Page guide ---------- */
+.guide { padding-top: 40px; }
+.guide-hero { padding-top: 40px; max-width: 860px; margin: 0 auto; }
+.guide .h2 { font-size: clamp(40px, 7vw, 76px); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.toc a { padding: 8px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: var(--text); text-decoration: none; font-weight: 700; font-size: 15px; }
+.toc a:hover { border-color: var(--cash); }
+.guide-section { padding-top: 64px; max-width: 860px; margin: 0 auto; }
+.guide-section > p { color: var(--soft); max-width: 720px; }
+.guide-section b { color: var(--text); }
+.h3 { font: 400 clamp(30px, 4vw, 42px)/1.05 var(--display); letter-spacing: .4px; margin: 0 0 14px; }
+.cmd-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
+.cmd-list { display: grid; gap: 8px; max-width: 520px; margin: 18px 0; }
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 10px; }
+.steps li { counter-increment: step; position: relative; padding: 14px 16px 14px 62px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); color: var(--soft); }
+.steps li::before { content: counter(step); position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--cash); color: var(--cash-ink); font: 400 20px var(--display); }
+.callout { margin: 20px 0; padding: 16px 20px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--cash); border-radius: var(--r); }
+.callout b { display: block; font-size: 17px; margin-bottom: 6px; }
+.callout p, .callout li { color: var(--soft); margin: 6px 0; }
+.callout ul { margin: 6px 0; padding-left: 4px; list-style: none; }
+.callout.warn { border-left-color: var(--orange); }
+.callout.cta { border-left-color: var(--aqua); }
+.tip-line { font-size: 15px; }
+kbd { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; background: #0d0812; border: 1px solid var(--line-2); border-bottom-width: 3px; color: var(--text); }
