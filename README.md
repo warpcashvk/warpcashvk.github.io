@@ -56,6 +56,10 @@ puis ouvrez http://localhost:8765.
 Le site est publié sur **https://warpcashvk.github.io** (GitHub Pages, dépôt `warpcashvk/warpcashvk.github.io`).
 Chaque modification envoyée sur la branche `main` apparaît sur le site en une à deux minutes.
 
+Les navigateurs gardent les fichiers en cache. Après une modification de `css/` ou `js/`,
+augmentez le numéro de version dans `index.html` et `guide/index.html`
+(`style.css?v=3` → `?v=4`, pareil pour les `.js`) pour que tout le monde voie la nouvelle version tout de suite.
+
 ## Crédits
 
 - Données : API publique VikingCraft.

@@ -22,7 +22,7 @@ window.CONFIG = {
   //        à partir de ce fichier. Laisser vide ("") = skin Steve par défaut.
   fondateurs: [
     { pseudo: "GambaleSempai", role: "Fondateur", skin: "img/skins/GambaleSempai.png" },
-    { pseudo: "shadowyahit", role: "Fondateur", skin: "" },
+    { pseudo: "shadowyahit", role: "Fondateur", skin: "img/skins/shadowyahit.png" },   // skin du compte « zerotwo »
   ],
 
   // Lien d'invitation Discord. Laisser vide ("") pour cacher le bouton.
