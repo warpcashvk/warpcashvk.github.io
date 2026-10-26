@@ -24,6 +24,7 @@ Tout se passe dans `js/config.js` :
 
 - **Zones** : changez `titre` et `texte`. Pour ajouter une zone, mettez l'image dans `img/zones/` et ajoutez un bloc dans `zones`.
 - **Discord** : collez le lien d'invitation dans `discord`.
+- **Pseudos Discord** : `discordPseudos` (boutons « copier » sur les pages Équipe, Guide et Mentions ; on ne contacte pas l'équipe en jeu).
 - **Mail de contact** : `email` (affiché sur la page Équipe et dans les mentions légales).
 - **Skins** : mettez le fichier PNG du skin dans `img/skins/` et indiquez son chemin dans `skin`.
   Le site dessine le personnage et la tête à partir de ce fichier.

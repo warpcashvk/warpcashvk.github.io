@@ -28,6 +28,9 @@ window.CONFIG = {
   // Lien d'invitation Discord. Laisser vide ("") pour cacher le bouton.
   discord: "",
 
+  // Pseudos Discord à contacter (affichés sans dire qui est qui). On ne contacte pas l'équipe en jeu.
+  discordPseudos: ["qn8w", "moonmisty32"],
+
   // Adresse mail de contact (page Équipe et mentions légales). Elle est écrite par le
   // JavaScript, donc absente du HTML brut que lisent les robots à spam.
   email: "warpcashvk@gmail.com",

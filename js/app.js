@@ -509,14 +509,12 @@ function renderDeals() {
 function renderTeamPeek() {
   $("#teamPeek").innerHTML = C.fondateurs.map(f => {
     const p = S.players[f.pseudo], online = !!p?.seen?.online;
-    const cmd = online ? `/msg ${f.pseudo} ` : `/mail ${f.pseudo} `;
     return `
     <div class="peek-member panel">
       ${head(f.pseudo, 48)}
       <div class="peek-who"><b>${esc(f.pseudo)}</b>
         <div class="online"><span class="dot${online ? " on" : ""}"></span>${p ? (online ? "En ligne" : `Vu ${ago(p.seen?.lastSeenSecondsAgo ?? 0)}`) : "Profil introuvable"}</div>
       </div>
-      <button class="cmdline" type="button" data-copy="${esc(cmd)}" title="Copier la commande"><span>${esc(cmd)}…</span><small>copier</small></button>
     </div>`;
   }).join("");
 }
@@ -647,7 +645,6 @@ function renderTeam() {
   $("#team").innerHTML = C.fondateurs.map(f => {
     const p = S.players[f.pseudo];
     const online = !!p?.seen?.online;
-    const cmd = online ? `/msg ${f.pseudo} ` : `/mail ${f.pseudo} `;
     const hours = p?.playtime ? Math.round(p.playtime.recordedSeconds / 3600) : null;
     return `
     <article class="member panel">
@@ -662,16 +659,27 @@ function renderTeam() {
           <dt>Argent</dt><dd>${money(p.money)}</dd>
           <dt>Recommandations</dt><dd>${esc(p.recommandation ?? "—")}</dd>
         </dl>` : ""}
-        <button class="cmdline" type="button" data-copy="${esc(cmd)}" title="Copier la commande"><span>${esc(cmd)}…</span><small>copier</small></button>
       </div>
     </article>`;
   }).join("");
   $("#contact").innerHTML = `
     <h3>Nous contacter</h3>
-    <p><b>En jeu :</b> si on est en ligne, <code>/msg pseudo message</code>. Sinon, <code>/mail pseudo message</code>, on le lira à la connexion. Le bouton sous chaque fondateur te donne la bonne commande.</p>
-    <p><b>Discord :</b> ${/^https:\/\//.test(C.discord) ? `<a class="btn btn-sm" href="${esc(C.discord)}" target="_blank" rel="noopener">Rejoindre le Discord</a>` : "lien bientôt disponible."}</p>
+    <p><b>Sur Discord</b>, ajoute l'un de nous en ami et envoie-nous un message (on ne répond pas en jeu) :</p>
+    <div class="discord-list" data-discord></div>
+    ${/^https:\/\//.test(C.discord) ? `<p><a class="btn btn-sm" href="${esc(C.discord)}" target="_blank" rel="noopener">Rejoindre le serveur Discord</a></p>` : ""}
     ${MAIL ? `<p><b>Par mail :</b> <a data-mail href="#"></a></p>` : ""}`;
   renderMail();
+  renderDiscord();
+}
+
+// ---------- Pseudos Discord (boutons « copier », sans dire qui est qui) ----------
+const DISCORD = (C.discordPseudos || []).map(String).filter(p => /^[\w.]{2,32}$/.test(p));
+function renderDiscord() {
+  document.querySelectorAll("[data-discord]").forEach(el => {
+    el.innerHTML = DISCORD.length
+      ? DISCORD.map(p => `<button class="cmdline" type="button" data-copy="${esc(p)}" title="Copier le pseudo Discord"><span>${esc(p)}</span><small>copier</small></button>`).join("")
+      : "Discord bientôt disponible.";
+  });
 }
 
 // ---------- Adresse mail (écrite ici pour ne pas être dans le HTML brut) ----------
@@ -1075,6 +1083,7 @@ loadSkins();
 renderWarps();
 renderZones();
 renderMail();
+renderDiscord();
 bind();
 bindMenu();
 showStaff();

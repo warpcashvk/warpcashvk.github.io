@@ -387,6 +387,8 @@ select.field { cursor: pointer; }
 .contact h3 { margin: 0; font: 400 26px var(--display); }
 .contact p { margin: 0; color: var(--soft); }
 .contact b { color: var(--text); }
+.discord-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.discord-list .cmdline { width: auto; min-width: 180px; }
 
 /* ---------- Classements ---------- */
 .progress { position: relative; height: 30px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }

@@ -11,7 +11,7 @@ import html
 import io
 import os
 
-VERSION = "10"
+VERSION = "11"
 SITE = "https://warpcashvk.github.io"
 TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/"
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -37,7 +37,7 @@ PAGES = [
     dict(page="carte", dossier="carte", titre="Carte des shops du warp Cash – VikingCraft FR",
          desc="Tous les shops de GambaleSempai et shadowyahit sur la carte du Continent de VikingCraft FR, avec leurs coordonnées."),
     dict(page="equipe", dossier="equipe", titre="L'équipe du warp Cash – GambaleSempai et shadowyahit",
-         desc="GambaleSempai et shadowyahit, les fondateurs du warp Cash sur VikingCraft FR : qui est en ligne et comment les contacter en jeu."),
+         desc="GambaleSempai et shadowyahit, les fondateurs du warp Cash sur VikingCraft FR : qui est en ligne et comment les contacter sur Discord."),
     dict(page="classements", dossier="classements", titre="Classements de GambaleSempai et shadowyahit – VikingCraft FR",
          desc="Les places de GambaleSempai et shadowyahit dans le top 100 des classements de VikingCraft FR : fortune, niveau, collections…"),
     dict(page="guide", dossier="guide", titre="Guide du joueur – Warp Cash VikingCraft", classe="guide",
