@@ -74,7 +74,7 @@ JSON_LD = """<script type="application/ld+json">
       "@id": "https://warpcashvk.github.io/#org",
       "name": "Warp Cash",
       "url": "https://warpcashvk.github.io/",
-      "logo": "https://warpcashvk.github.io/img/og.jpg",
+      "logo": "https://warpcashvk.github.io/img/icones/emeraude-512.png",
       "founder": [
         { "@type": "Person", "name": "GambaleSempai" },
         { "@type": "Person", "name": "shadowyahit" }
@@ -121,7 +121,10 @@ def head(p):
     out = "\n".join(lignes) + "\n"
     if p["page"] == "accueil":
         out += JSON_LD
-    out += f'<link rel="icon" href="{TEX}item/emerald.png">\n'
+    # Icône hébergée sur le site, carrée et multiple de 48 px : sinon Google affiche un globe gris
+    out += ('<link rel="icon" href="/favicon.ico" sizes="48x48">\n'
+            '<link rel="icon" type="image/png" sizes="192x192" href="/img/icones/emeraude-192.png">\n'
+            '<link rel="apple-touch-icon" href="/img/icones/apple-touch-icon.png">\n')
     out += '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
     out += '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Pixelify+Sans:wght@700&display=swap">\n'
     if p["page"] == "carte":
