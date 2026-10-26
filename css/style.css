@@ -14,6 +14,10 @@
   --muted: #8d7f8c;
   --cash: #c6f548;          /* accent principal */
   --cash-ink: #13200a;
+  --cash-rgb: 198, 245, 72;  /* même couleur, pour les transparences */
+  --cash-hi: #dcff86;
+  --splash-shadow: #20330a;
+  --glow-rgb: 255, 117, 24;
   --orange: #ffa24b;        /* surtitres, clin d'œil VikingCraft */
   --red: #ff6b6b;
   --aqua: #6fe3ff;
@@ -38,8 +42,8 @@ body {
   line-height: 1.55;
   color: var(--text);
   background:
-    radial-gradient(900px 500px at 85% -10%, rgba(255, 117, 24, .10), transparent 60%),
-    radial-gradient(800px 600px at -10% 40%, rgba(198, 245, 72, .05), transparent 60%),
+    radial-gradient(900px 500px at 85% -10%, rgba(var(--glow-rgb), .10), transparent 60%),
+    radial-gradient(800px 600px at -10% 40%, rgba(var(--cash-rgb), .05), transparent 60%),
     var(--bg);
   overflow-x: hidden;
 }
@@ -90,7 +94,7 @@ code { font-family: var(--mono); font-weight: 700; color: var(--cash); }
 .btn:disabled { opacity: .45; cursor: default; transform: none; border-color: var(--line); }
 .btn-accent {
   color: var(--cash-ink); border-color: transparent;
-  background: linear-gradient(180deg, #dcff86, var(--cash) 55%);
+  background: linear-gradient(180deg, var(--cash-hi), var(--cash) 55%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -3px 0 rgba(0, 0, 0, .18), 0 8px 22px -10px var(--cash);
 }
 .btn-accent:hover, .btn-accent:focus-visible { border-color: transparent; filter: brightness(1.05); }
@@ -102,7 +106,7 @@ code { font-family: var(--mono); font-weight: 700; color: var(--cash); }
   color: var(--text); background: #0d0812;
   border: 1px solid var(--line-2); border-radius: 12px;
 }
-.field:focus { outline: none; border-color: var(--cash); box-shadow: 0 0 0 3px rgba(198, 245, 72, .18); }
+.field:focus { outline: none; border-color: var(--cash); box-shadow: 0 0 0 3px rgba(var(--cash-rgb), .18); }
 .field::placeholder { color: var(--muted); }
 select.field { cursor: pointer; }
 
@@ -164,7 +168,7 @@ select.field { cursor: pointer; }
 .splash {
   position: absolute; right: -54px; bottom: -14px;
   font: 700 clamp(15px, 2.2vw, 22px) var(--pixel); color: var(--cash);
-  text-shadow: 2px 2px 0 #20330a;
+  text-shadow: 2px 2px 0 var(--splash-shadow);
   transform: rotate(-14deg);
   animation: splash .55s ease-in-out infinite alternate;
   white-space: nowrap;
@@ -296,7 +300,7 @@ select.field { cursor: pointer; }
 .coord:hover { color: var(--text); }
 
 .badge { display: inline-block; padding: 2px 9px; font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; border-radius: 999px; vertical-align: 2px; white-space: nowrap; }
-.b-cheap { background: rgba(198, 245, 72, .14); color: var(--cash); }
+.b-cheap { background: rgba(var(--cash-rgb), .14); color: var(--cash); }
 .b-only { background: rgba(255, 138, 216, .14); color: var(--pink); }
 .b-best { background: rgba(111, 227, 255, .14); color: var(--aqua); }
 .b-promo { background: rgba(255, 162, 75, .16); color: var(--orange); }
@@ -356,7 +360,7 @@ select.field { cursor: pointer; }
 .pin { display: grid; place-items: center; background: #0d0812; border: 2px solid var(--cash); border-radius: 9px; box-shadow: 0 4px 12px rgba(0, 0, 0, .5); }
 .pin img { width: 20px; height: 20px; }
 .pin.out { border-color: var(--muted); filter: grayscale(1) brightness(.7); }
-.cluster { display: grid; place-items: center; font: 400 18px var(--display); color: var(--cash-ink); background: var(--cash); border-radius: 50%; box-shadow: 0 0 0 6px rgba(198, 245, 72, .25), 0 6px 18px rgba(0, 0, 0, .5); }
+.cluster { display: grid; place-items: center; font: 400 18px var(--display); color: var(--cash-ink); background: var(--cash); border-radius: 50%; box-shadow: 0 0 0 6px rgba(var(--cash-rgb), .25), 0 6px 18px rgba(0, 0, 0, .5); }
 .credit { font-size: 13px; color: var(--muted); margin-top: 10px; }
 
 /* ---------- Équipe ---------- */
@@ -364,14 +368,14 @@ select.field { cursor: pointer; }
 .member { display: grid; grid-template-columns: 128px 1fr; gap: 20px; padding: 20px; }
 .member .skin {
   width: 128px; height: 250px; object-fit: contain; padding: 12px;
-  background: radial-gradient(circle at 50% 30%, rgba(198, 245, 72, .14), transparent 70%), #0d0812;
+  background: radial-gradient(circle at 50% 30%, rgba(var(--cash-rgb), .14), transparent 70%), #0d0812;
   border: 1px solid var(--line); border-radius: 12px;
 }
 .member h3 { margin: 0; font: 400 30px var(--display); letter-spacing: .4px; word-break: break-word; }
 .member .role { margin: 6px 0 12px; }
 .online { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--soft); margin-bottom: 12px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
-.dot.on { background: var(--cash); box-shadow: 0 0 0 4px rgba(198, 245, 72, .2); }
+.dot.on { background: var(--cash); box-shadow: 0 0 0 4px rgba(var(--cash-rgb), .2); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; font-weight: 700; }
@@ -391,7 +395,7 @@ select.field { cursor: pointer; }
 
 /* ---------- Classements ---------- */
 .progress { position: relative; height: 30px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
-.progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, rgba(198, 245, 72, .35), var(--cash)); transition: width .3s; }
+.progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, rgba(var(--cash-rgb), .35), var(--cash)); transition: width .3s; }
 .progress span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
 .boards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .board { padding: 14px 16px; }
@@ -499,3 +503,74 @@ select.field { cursor: pointer; }
 .callout.cta { border-left-color: var(--aqua); }
 .tip-line { font-size: 15px; }
 kbd { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; background: #0d0812; border: 1px solid var(--line-2); border-bottom-width: 3px; color: var(--text); }
+
+/* =====================================================================
+   Thèmes de saison (js/theme.js pose data-theme sur <html>)
+   ===================================================================== */
+.season-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 990; pointer-events: none; }
+.season-toggle {
+  position: fixed; left: 16px; bottom: 16px; z-index: 1050;
+  width: 46px; height: 46px; display: grid; place-items: center; font-size: 22px; line-height: 1;
+  background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 50%;
+  box-shadow: var(--shadow); cursor: pointer; transition: transform .15s, filter .15s, border-color .15s;
+}
+.season-toggle:hover, .season-toggle:focus-visible { transform: translateY(-2px); border-color: var(--cash); outline: none; }
+.season-toggle.off { filter: grayscale(1) opacity(.55); }
+
+[data-theme] .over::before {
+  content: ""; display: inline-block; width: 15px; height: 15px; margin-right: 8px; vertical-align: -2px;
+  background: var(--deco-over) center / contain no-repeat; image-rendering: pixelated;
+}
+[data-theme] .hero-card::before, [data-theme] .hero-card::after {
+  content: ""; position: absolute; top: 18px; width: var(--deco-size); height: var(--deco-size); z-index: 1;
+  background: var(--deco-hero) center / contain no-repeat; image-rendering: pixelated; pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .6));
+}
+[data-theme] .hero-card::before { left: 22px; transform: rotate(-8deg); }
+[data-theme] .hero-card::after { right: 22px; transform: rotate(8deg) scaleX(-1); }
+[data-theme] .card, [data-theme] .member, [data-theme] .board { position: relative; }
+[data-theme] .card-badges { position: relative; z-index: 1; }
+
+/* ---------- Halloween ---------- */
+[data-theme="halloween"] {
+  --bg: #0c0611; --bg-2: #140a1b; --panel: #1a0f22; --panel-2: #26142f; --line: #3f2547; --line-2: #613458;
+  --cash: #ff8c1a; --cash-rgb: 255, 140, 26; --cash-hi: #ffc078; --cash-ink: #2a1300;
+  --orange: #c792ff; --splash-shadow: #4a1d00; --glow-rgb: 155, 80, 255;
+  --deco-over: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/block/jack_o_lantern.png");
+  --deco-hero: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/block/jack_o_lantern.png");
+  --deco-size: clamp(48px, 7vw, 84px);
+}
+[data-theme="halloween"] .card::after, [data-theme="halloween"] .member::after, [data-theme="halloween"] .board::after {
+  content: ""; position: absolute; top: 0; right: 0; width: 34px; height: 34px; pointer-events: none; opacity: .32;
+  background: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/block/cobweb.png") center / contain no-repeat;
+  image-rendering: pixelated; border-top-right-radius: var(--r);
+}
+[data-theme="halloween"] .hero-card { box-shadow: var(--shadow), inset 0 -120px 120px -60px rgba(255, 120, 20, .25); }
+
+/* ---------- Noël ---------- */
+[data-theme="noel"] {
+  --bg: #07080f; --bg-2: #0d1018; --panel: #121520; --panel-2: #1a1e2c; --line: #2a3042; --line-2: #3f465e;
+  --cash: #ff6b74; --cash-rgb: 255, 107, 116; --cash-hi: #ffb3b8; --cash-ink: #2b0508;
+  --orange: #5ee38a; --splash-shadow: #5a0f16; --glow-rgb: 94, 227, 138;
+  --deco-over: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/snowball.png");
+  --deco-hero: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/item/lantern.png");
+  --deco-size: clamp(64px, 9vw, 110px);
+}
+[data-theme="noel"] .card::before, [data-theme="noel"] .member::before, [data-theme="noel"] .board::before {
+  content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 7px; pointer-events: none;
+  background: url("https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/block/snow.png") 0 0 / 14px repeat-x;
+  image-rendering: pixelated; border-radius: var(--r) var(--r) 0 0; box-shadow: 0 2px 0 rgba(255, 255, 255, .12);
+}
+/* guirlande lumineuse sous la barre du haut */
+[data-theme="noel"] .topbar::after {
+  content: ""; position: absolute; left: 24px; right: 24px; bottom: -5px; height: 9px; pointer-events: none;
+  background:
+    radial-gradient(circle, #ff4d5a 2.5px, transparent 3.5px) 0 0 / 36px 9px repeat-x,
+    radial-gradient(circle, #5ee38a 2.5px, transparent 3.5px) 12px 0 / 36px 9px repeat-x,
+    radial-gradient(circle, #ffcc4d 2.5px, transparent 3.5px) 24px 0 / 36px 9px repeat-x;
+  animation: twinkle 1.6s steps(2) infinite;
+}
+@keyframes twinkle { 50% { opacity: .55; } }
+[data-theme="noel"] .splash { color: #fff; }
+@media (prefers-reduced-motion: reduce) { [data-theme="noel"] .topbar::after { animation: none; } }
+@media (max-width: 860px) { .season-toggle { left: 12px; bottom: 12px; width: 42px; height: 42px; font-size: 20px; } }

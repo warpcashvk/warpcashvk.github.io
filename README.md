@@ -45,6 +45,18 @@ Pour enregistrer, il faut un **jeton GitHub** (à créer une fois, par chacun de
 Le jeton reste dans le navigateur (cocher « Se souvenir sur cet appareil » pour ne pas le recoller).
 Ne le partagez jamais : avec lui, on peut modifier le site. En cas de doute, supprimez-le sur GitHub et créez-en un autre.
 
+## Thèmes de saison
+
+Le site change de thème tout seul, chaque année (fichier `js/theme.js`) :
+
+- **Halloween** du 1er au 31 octobre : orange et violet, citrouilles, toiles d'araignée, chauves-souris ;
+- **Noël** du 1er novembre au 1er janvier inclus : rouge et vert, neige qui tombe, guirlande, lanternes ;
+- le reste de l'année : thème classique.
+
+Les visiteurs peuvent couper le thème avec le bouton 🎃 / 🎄 en bas à gauche (retenu jusqu'à la saison suivante).
+L'animation est coupée d'office pour ceux qui ont demandé moins d'animations dans leur système.
+Pour voir un thème hors saison : ajouter `?theme=halloween`, `?theme=noel` ou `?theme=classique` à l'adresse.
+
 ## Changer le mot de passe de l'espace équipe
 
 Le mot de passe n'est écrit nulle part en clair : `js/config.js` ne contient que son empreinte
