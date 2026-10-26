@@ -16,7 +16,14 @@ const LOW_STOCK = 64;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (n, d = 0) => Number(n).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
-const money = n => (n == null ? "—" : (Math.abs(n) >= 1000 ? num(n) : num(n, 2)) + " " + C.monnaie);
+const money = n => {
+  if (n == null) return "—";
+  const a = Math.abs(n);
+  // les petits prix gardent leurs décimales (0,0052 $) pour que les comparaisons restent lisibles
+  const s = a >= 1000 ? num(n) : a >= 1 || a === 0 ? num(n, 2)
+    : Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  return s + " " + C.monnaie;
+};
 const unit = s => s.price / (s.stackAmount || 1);
 const int = v => (Number.isFinite(Number(v)) ? Math.round(Number(v)) : 0);
 const median = a => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
@@ -143,6 +150,8 @@ const S = {
   ours: [],       // nos shops, enrichis
   market: [],     // HDV, prix agrégés par item
   players: {},    // profils des fondateurs
+  items: { categories: ["Divers"], items: {} },   // data/items.json : catégories, notes, promos
+  itemsLock: 0,   // après un enregistrement, on garde la version locale le temps que GitHub publie
   refreshed: null,
   view: { mode: "sell", q: "", cat: "", sort: "nom", hideEmpty: false },
   cart: Object.fromEntries(Object.entries(store.get("wc_cart", {}) || {}).map(([k, v]) => [String(k), int(v)]).filter(([, v]) => v > 0)),
@@ -228,6 +237,21 @@ const cleanShop = s => ({
   x: int(s?.x), y: int(s?.y), z: int(s?.z),
 });
 const cleanEntry = e => ({ position: Math.max(0, int(e?.position)), playerName: String(e?.playerName ?? ""), formattedScore: String(e?.formattedScore ?? "") });
+const txt = (v, max) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+function cleanItems(d) {
+  const categories = [...new Set((Array.isArray(d?.categories) ? d.categories : []).map(c => txt(c, 40)).filter(Boolean))];
+  if (!categories.includes("Divers")) categories.push("Divers");
+  const items = {};
+  for (const [m, v] of Object.entries(d?.items && typeof d.items === "object" ? d.items : {})) {
+    if (!MATERIAL_RE.test(m)) continue;
+    const e = {}, cat = txt(v?.categorie, 40), note = txt(v?.note, 80), promo = txt(v?.promo, 20);
+    if (cat) e.categorie = categories.includes(cat) ? cat : "Divers";
+    if (note) e.note = note;
+    if (promo) e.promo = promo;
+    if (Object.keys(e).length) items[m] = e;
+  }
+  return { categories, items };
+}
 
 // ---------- Chargement des données ----------
 async function loadShops() {
@@ -253,9 +277,16 @@ async function loadPlayers() {
   C.fondateurs.forEach((f, i) => { S.players[f.pseudo] = res[i]; });
 }
 
+async function loadItems() {
+  if (Date.now() < S.itemsLock) return;
+  const r = await fetch(`data/items.json?t=${Date.now()}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(`items.json ${r.status}`);
+  S.items = cleanItems(await r.json());
+}
+
 function enrich() {
   S.ours = S.all.filter(s => isOurs(s.ownerName)).map(s => {
-    const extra = C.items[s.material] || {};
+    const extra = S.items.items[s.material] || {};
     const o = { ...s, cat: extra.categorie || "Divers", note: extra.note || "", promo: extra.promo || "", sector: sector(s) };
     o.cmp = compare(o);
     return o;
@@ -264,7 +295,7 @@ function enrich() {
 
 async function loadAll(first) {
   try {
-    await Promise.all([loadShops(), loadMarket().catch(() => { S.market = []; }), loadPlayers()]);
+    await Promise.all([loadShops(), loadMarket().catch(() => { S.market = []; }), loadPlayers(), loadItems().catch(console.error)]);
     enrich();
     renderAll(first);
   } catch (err) {
@@ -281,7 +312,7 @@ function renderAll(first) {
   renderCart();
   renderTeam();
   renderMap();
-  if (staffUnlocked()) renderDash();
+  if (staffUnlocked()) { renderDash(); if (!E.dirty) renderEditor(); }
   const t = S.refreshed ? new Date(S.refreshed) : new Date();
   $("#shopsUpdated").textContent = `Mis à jour à ${t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`;
   if (first && location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
@@ -316,66 +347,92 @@ function openZone(i) {
   dlg.showModal();
 }
 
-// ---------- Liste des prix ----------
+// ---------- Liste des prix : grille de cartes rangée par catégorie ----------
+// Ordre d'affichage : celui choisi dans l'Espace équipe, puis les catégories inconnues, « Divers » en dernier
+function catOrder(cats) {
+  const ref = S.items.categories;
+  const rank = c => (c === "Divers" && ref.indexOf(c) === ref.length - 1 ? 1e6 : ref.includes(c) ? ref.indexOf(c) : 1e5);
+  return [...cats].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, "fr"));
+}
+function visibleShops(withCat) {
+  const v = S.view, q = v.q.trim().toLowerCase();
+  return S.ours.filter(s => s.type === v.mode
+    && (!withCat || !v.cat || s.cat === v.cat)
+    && (!v.hideEmpty || s.remainingStock > 0)
+    && (!q || s.name.toLowerCase().includes(q) || s.material.toLowerCase().includes(q) || s.cat.toLowerCase().includes(q)));
+}
 function renderFilters() {
-  const cats = [...new Set(S.ours.map(s => s.cat))].sort((a, b) => a.localeCompare(b, "fr"));
-  const sel = $("#cat"), cur = sel.value;
-  sel.innerHTML = `<option value="">Toutes catégories</option>` + cats.map(c => `<option${c === cur ? " selected" : ""}>${esc(c)}</option>`).join("");
+  const list = visibleShops(false);
+  const count = c => list.filter(s => s.cat === c).length;
+  const cats = catOrder(new Set(S.ours.filter(s => s.type === S.view.mode).map(s => s.cat)));
+  if (S.view.cat && !cats.includes(S.view.cat)) S.view.cat = "";
+  const chip = (c, label, n) => `<button class="chip${S.view.cat === c ? " on" : ""}" type="button" data-cat="${esc(c)}"${n ? "" : " disabled"}>${esc(label)} <small>${n}</small></button>`;
+  $("#cats").innerHTML = chip("", "Tout", list.length) + cats.map(c => chip(c, c, count(c))).join("");
   $("#nSell").textContent = `(${S.ours.filter(s => s.type === "sell").length})`;
   $("#nBuy").textContent = `(${S.ours.filter(s => s.type === "buy").length})`;
 }
 
-function shopRow(s) {
-  const sell = s.type === "sell", out = s.remainingStock <= 0;
+function cmpLine(s) {
+  const c = s.cmp, u = unit(s);
+  if (c.verdict === "variante") return { cls: "", txt: "Prix non comparable" };
+  if (s.type === "sell") {
+    const lows = [c.min, c.hdvMin].filter(v => v != null);
+    if (!lows.length) return { cls: "good", txt: "Personne d'autre n'en vend" };
+    const low = Math.min(...lows);
+    return { cls: u < low ? "good" : u > low ? "bad" : "", txt: `Ailleurs dès ${money(low)}` };
+  }
+  if (!c.n) return { cls: "good", txt: "Personne d'autre ne le rachète" };
+  return { cls: u > c.max ? "good" : u < c.max ? "bad" : "", txt: `Ailleurs jusqu'à ${money(c.max)}` };
+}
+
+function shopCard(s) {
+  const sell = s.type === "sell", out = s.remainingStock <= 0, u = unit(s);
   const pct = Math.min(100, s.remainingStock / Math.max(FULL_STOCK, s.remainingStock) * 100);
   const barCls = out ? "zero" : s.remainingStock <= LOW_STOCK ? "low" : "";
   const stockTxt = sell
     ? (out ? `<span class="badge b-out">Rupture</span>` : `${num(s.remainingStock)} en stock`)
     : (out ? `<span class="badge b-out">Complet</span>` : `Encore ${num(s.remainingStock)}`);
-  const inCart = S.cart[s.id];
+  const cmp = cmpLine(s), inCart = S.cart[s.id];
   return `
-  <div class="row panel${out ? " out" : ""}">
-    <span class="slot">${icon(s.material)}</span>
-    <div class="row-main">
-      <div class="row-name">${esc(s.name)} ${s.promo ? `<span class="badge b-promo">${esc(s.promo)}</span>` : ""} ${publicBadge(s)}</div>
-      <div class="row-sub">
-        <span>${head(s.ownerName)}${esc(s.ownerName)}</span>
-        <span class="coord tip" tabindex="0" data-copy="${s.x} ${s.y} ${s.z}" data-tip="Cliquer pour copier les coordonnées">${esc(s.sector)} · ${s.x} ${s.y} ${s.z}</span>
-      </div>
-      ${s.note ? `<div class="row-note">${esc(s.note)}</div>` : ""}
+  <article class="card panel${out ? " out" : ""}">
+    <div class="card-top">
+      <span class="slot">${icon(s.material)}</span>
+      <div class="card-badges">${s.promo ? `<span class="badge b-promo">${esc(s.promo)}</span>` : ""}${publicBadge(s)}</div>
     </div>
-    <div class="row-price tip" tabindex="0" data-tip="${esc(compareTip(s))}">
-      <b>${money(s.price)}</b><small>${s.stackAmount > 1 ? `les ${s.stackAmount}` : "l'unité"}</small>
+    <h4 class="card-name">${esc(s.name)}</h4>
+    ${s.note ? `<p class="card-note">${esc(s.note)}</p>` : ""}
+    <div class="card-price"><b>${money(u)}</b><small>/ unité</small></div>
+    <div class="card-stack">x64 : <b>${money(u * 64)}</b></div>
+    <div class="card-cmp tip ${cmp.cls}" tabindex="0" data-tip="${esc(compareTip(s))}">${esc(cmp.txt)}</div>
+    <div class="card-foot">
+      <div class="card-stock">${stockTxt}<div class="bar ${barCls}"><i style="width:${pct}%"></i></div></div>
+      ${sell ? `<button class="add${inCart ? " in" : ""}" type="button" data-add="${esc(s.id)}" ${out ? "disabled" : ""} aria-label="${inCart ? "Retirer" : "Ajouter"} ${esc(s.name)} ${inCart ? "du" : "au"} panier" title="${inCart ? "Dans le panier (cliquer pour retirer)" : "Ajouter au panier"}">${inCart ? "✓" : "+"}</button>` : ""}
     </div>
-    <div class="row-stock">${stockTxt}<div class="bar ${barCls}"><i style="width:${pct}%"></i></div></div>
-    <div class="row-act">${sell
-      ? `<button class="btn btn-sm" type="button" data-add="${esc(s.id)}" ${out ? "disabled" : ""}>${inCart ? "✓ Panier" : "+ Panier"}</button>`
-      : ""}</div>
-  </div>`;
+  </article>`;
 }
 
 function renderShops() {
-  const v = S.view, q = v.q.trim().toLowerCase();
-  let list = S.ours.filter(s => s.type === v.mode
-    && (!v.cat || s.cat === v.cat)
-    && (!v.hideEmpty || s.remainingStock > 0)
-    && (!q || s.name.toLowerCase().includes(q) || s.material.toLowerCase().includes(q) || s.ownerName.toLowerCase().includes(q)));
-  const deal = s => s.cmp.ref ? unit(s) / s.cmp.ref * (s.type === "sell" ? 1 : -1) : (s.cmp.verdict === "seul" ? 0.5 : 1);
+  const v = S.view;
   const sorters = {
     nom: (a, b) => a.name.localeCompare(b.name, "fr") || unit(a) - unit(b),
     prix: (a, b) => unit(a) - unit(b),
     "prix-desc": (a, b) => unit(b) - unit(a),
     stock: (a, b) => b.remainingStock - a.remainingStock,
-    affaire: (a, b) => deal(a) - deal(b),
   };
-  list.sort(sorters[v.sort]);
-  // ruptures en bas de liste
-  list = [...list.filter(s => s.remainingStock > 0), ...list.filter(s => s.remainingStock <= 0)];
+  const list = visibleShops(true).sort(sorters[v.sort]);
   $("#modeHint").textContent = v.mode === "sell"
-    ? "Ce que tu peux acheter sur nos shops. Survole un prix pour le comparer au reste du serveur."
+    ? "Ce que tu peux acheter sur nos shops. Survole « Ailleurs dès » pour le détail des autres shops et de l'HDV."
     : "Ce qu'on te rachète : viens vendre tes items sur ces shops.";
-  $("#shopList").innerHTML = list.length ? list.map(shopRow).join("") : `<p class="empty panel">Aucun shop ne correspond.</p>`;
+  if (!list.length) { $("#shopList").innerHTML = `<p class="empty panel">Aucun shop ne correspond.</p>`; return; }
+  $("#shopList").innerHTML = catOrder(new Set(list.map(s => s.cat))).map(c => {
+    const g = list.filter(s => s.cat === c);
+    // ruptures en fin de groupe
+    const sorted = [...g.filter(s => s.remainingStock > 0), ...g.filter(s => s.remainingStock <= 0)];
+    return `<section class="cat-group"><h3 class="cat-title">${esc(c)} <small>${g.length}</small></h3>
+      <div class="cards">${sorted.map(shopCard).join("")}</div></section>`;
+  }).join("");
 }
+function refreshList() { renderFilters(); renderShops(); }
 
 // ---------- Panier ----------
 function saveCart() { store.set("wc_cart", S.cart); }
@@ -613,8 +670,8 @@ function showStaff() {
   $("#gestion").hidden = !on;
   if (!on) return;
   const ok = staffUnlocked();
-  $("#lockForm").hidden = ok; $("#dash").hidden = !ok;
-  if (ok) renderDash(); else setTimeout(() => $("#pw").focus(), 50);
+  $("#lockForm").hidden = ok; $("#dash").hidden = !ok; $("#editor").hidden = !ok;
+  if (ok) { renderDash(); renderEditor(); } else setTimeout(() => $("#pw").focus(), 50);
   $("#gestion").scrollIntoView();
 }
 function renderDash() {
@@ -658,6 +715,179 @@ function renderDash() {
   </div>`;
 }
 
+// ---------- Espace équipe : catégories, notes et promos des items ----------
+// Les modifications sont faites sur un brouillon, puis écrites dans data/items.json
+// sur GitHub avec un jeton personnel (GitHub Pages republie le site tout seul).
+const E = { draft: null, dirty: false };
+const TOKEN_KEY = "wc_gh_token";
+const tokenGet = () => { try { return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } };
+function tokenSet(t, remember) {
+  try {
+    localStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(TOKEN_KEY);
+    if (t) (remember ? localStorage : sessionStorage).setItem(TOKEN_KEY, t);
+  } catch { /* stockage indisponible */ }
+}
+const remembered = () => { try { return !!localStorage.getItem(TOKEN_KEY); } catch { return false; } };
+
+function edStart() { E.draft = JSON.parse(JSON.stringify(S.items)); E.dirty = false; }
+function edTouch() { E.dirty = true; const m = $("#edState"); if (m) { m.textContent = "Modifications non enregistrées"; m.classList.remove("ok"); } }
+function edMaterials() {
+  const names = new Map();
+  for (const s of S.ours) if (!names.has(s.material)) names.set(s.material, s.name);
+  return [...names].sort((a, b) => a[1].localeCompare(b[1], "fr"));
+}
+
+function renderEditor() {
+  const box = $("#editor");
+  if (!box || box.hidden) return;
+  if (!S.ours.length) { box.innerHTML = ""; return; }
+  if (!E.draft || !E.dirty) edStart();
+  const d = E.draft, cats = d.categories;
+  const opt = cur => cats.map(c => `<option${c === cur ? " selected" : ""}>${esc(c)}</option>`).join("");
+  box.innerHTML = `
+  <div class="dash">
+    <h3>Catégories et textes des items</h3>
+    <p class="muted">Change ce que tu veux, puis « Enregistrer sur le site » : tout le monde voit le changement 1 à 2 minutes plus tard.</p>
+
+    <div class="ed-grid">
+      <div class="panel ed-cats">
+        <h4>Catégories <small class="muted">dans l'ordre d'affichage</small></h4>
+        ${cats.map((c, i) => `
+        <div class="ed-cat">
+          <input class="field" value="${esc(c)}" maxlength="40" data-ed-rename="${i}" aria-label="Nom de la catégorie ${esc(c)}"${c === "Divers" ? ` disabled title="Catégorie par défaut, non modifiable"` : ""}>
+          <button class="btn btn-sm" type="button" data-ed-move="${i}:-1" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button>
+          <button class="btn btn-sm" type="button" data-ed-move="${i}:1" ${i === cats.length - 1 ? "disabled" : ""} aria-label="Descendre">↓</button>
+          <button class="btn btn-sm" type="button" data-ed-del="${i}" ${c === "Divers" ? "disabled" : ""} aria-label="Supprimer ${esc(c)}">✕</button>
+        </div>`).join("")}
+        <form class="ed-cat" id="edAdd">
+          <input class="field" id="edNew" maxlength="40" placeholder="Nouvelle catégorie" autocomplete="off">
+          <button class="btn btn-sm" type="submit">Ajouter</button>
+        </form>
+        <p class="muted ed-help">Supprimer une catégorie range ses items dans « Divers ».</p>
+      </div>
+
+      <div class="panel ed-save">
+        <h4>Enregistrer</h4>
+        <label for="ghToken">Jeton GitHub</label>
+        <input class="field" id="ghToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" value="${esc(tokenGet())}">
+        <label class="check"><input type="checkbox" id="ghRemember" ${remembered() ? "checked" : ""}> Se souvenir sur cet appareil</label>
+        <button class="btn btn-accent" type="button" id="edSave">Enregistrer sur le site</button>
+        <button class="btn btn-sm" type="button" id="edReset">Annuler mes changements</button>
+        <p class="ed-state${E.dirty ? "" : " ok"}" id="edState" role="status">${E.dirty ? "Modifications non enregistrées" : "À jour"}</p>
+        <p class="muted ed-help">Le jeton reste dans ce navigateur. Ne le donne à personne.</p>
+      </div>
+    </div>
+
+    <div class="panel table-wrap"><table class="table ed-table">
+      <tr><th>Item</th><th>Catégorie</th><th>Note <small>(sous le nom)</small></th><th>Promo <small>(badge)</small></th></tr>
+      ${edMaterials().map(([m, name]) => {
+        const it = d.items[m] || {};
+        return `<tr>
+          <td>${icon(m, 20)}${esc(name)}</td>
+          <td><select class="field" data-ed-m="${m}" data-ed-f="categorie" aria-label="Catégorie de ${esc(name)}">${opt(it.categorie || "Divers")}</select></td>
+          <td><input class="field" data-ed-m="${m}" data-ed-f="note" maxlength="80" value="${esc(it.note || "")}" aria-label="Note de ${esc(name)}"></td>
+          <td><input class="field ed-promo" data-ed-m="${m}" data-ed-f="promo" maxlength="20" value="${esc(it.promo || "")}" placeholder="ex. -20 %" aria-label="Promo de ${esc(name)}"></td>
+        </tr>`;
+      }).join("")}
+    </table></div>
+  </div>`;
+}
+
+function edSetField(m, f, v) {
+  const d = E.draft, it = { ...(d.items[m] || {}) };
+  v = txt(v, f === "categorie" ? 40 : f === "note" ? 80 : 20);
+  if (v && !(f === "categorie" && v === "Divers")) it[f] = v; else delete it[f];
+  if (Object.keys(it).length) d.items[m] = it; else delete d.items[m];
+  edTouch();
+}
+function edRenameCat(i, name) {
+  const d = E.draft, old = d.categories[i];
+  name = txt(name, 40);
+  if (!name || name === old || old === "Divers") { renderEditor(); return; }
+  if (d.categories.includes(name)) { toast("Cette catégorie existe déjà"); renderEditor(); return; }
+  d.categories[i] = name;
+  for (const it of Object.values(d.items)) if (it.categorie === old) it.categorie = name;
+  edTouch(); renderEditor();
+}
+function edDelCat(i) {
+  const d = E.draft, c = d.categories[i];
+  if (c === "Divers") return;
+  d.categories.splice(i, 1);
+  for (const [m, it] of Object.entries(d.items)) if (it.categorie === c) { delete it.categorie; if (!Object.keys(it).length) delete d.items[m]; }
+  edTouch(); renderEditor();
+}
+function edMoveCat(i, dir) {
+  const c = E.draft.categories, j = i + dir;
+  if (j < 0 || j >= c.length) return;
+  [c[i], c[j]] = [c[j], c[i]];
+  edTouch(); renderEditor();
+}
+
+const b64 = str => { let bin = ""; for (const b of new TextEncoder().encode(str)) bin += String.fromCharCode(b); return btoa(bin); };
+async function edSave() {
+  const msg = t => { $("#edState").textContent = t; };
+  const token = $("#ghToken").value.trim();
+  if (!token) { msg("Colle d'abord ton jeton GitHub."); $("#ghToken").focus(); return; }
+  tokenSet(token, $("#ghRemember").checked);
+  const g = C.github, url = `https://api.github.com/repos/${g.depot}/contents/${g.fichier}`;
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  $("#edSave").disabled = true; msg("Enregistrement…");
+  try {
+    const cur = await fetch(`${url}?ref=${encodeURIComponent(g.branche)}`, { headers, cache: "no-store" });
+    if (cur.status === 401) throw new Error("Jeton refusé par GitHub (expiré ou mal copié).");
+    if (cur.status === 403 || cur.status === 404) throw new Error("Ce jeton n'a pas accès au dépôt du site.");
+    if (!cur.ok) throw new Error(`GitHub répond ${cur.status}.`);
+    const { sha } = await cur.json();
+    const data = cleanItems(E.draft);
+    const body = {
+      message: "Items mis à jour depuis l'Espace équipe",
+      content: b64(JSON.stringify(data, null, 2) + "\n"),
+      sha, branch: g.branche,
+      committer: { name: "Warp Cash", email: g.email },
+    };
+    const r = await fetch(url, { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (r.status === 403 || r.status === 404) throw new Error("Ce jeton ne peut pas écrire sur le dépôt (droit « Contents : Read and write »).");
+    if (r.status === 409 || r.status === 422) throw new Error("Le fichier a changé entre-temps. Recharge la page puis recommence.");
+    if (!r.ok) throw new Error(`GitHub répond ${r.status}.`);
+    S.items = data; S.itemsLock = Date.now() + 5 * 60e3;
+    E.dirty = false;
+    enrich(); refreshList(); renderDash(); renderEditor();
+    msg("Enregistré ! Visible pour tout le monde dans 1 à 2 minutes."); $("#edState").classList.add("ok");
+    toast("Enregistré sur le site");
+  } catch (err) {
+    msg(err.message || "Impossible de joindre GitHub.");
+  } finally {
+    const b = $("#edSave"); if (b) b.disabled = false;
+  }
+}
+
+function bindEditor() {
+  const box = $("#editor");
+  box.addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.edM) edSetField(t.dataset.edM, t.dataset.edF, t.value);
+    else if (t.dataset.edRename !== undefined) edRenameCat(+t.dataset.edRename, t.value);
+    else if (t.id === "ghRemember") tokenSet($("#ghToken").value.trim(), t.checked);
+  });
+  box.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.edMove) { const [i, dir] = t.dataset.edMove.split(":").map(Number); edMoveCat(i, dir); }
+    else if (t.dataset.edDel !== undefined) edDelCat(+t.dataset.edDel);
+    else if (t.id === "edSave") edSave();
+    else if (t.id === "edReset") { E.dirty = false; renderEditor(); }
+  });
+  box.addEventListener("submit", e => {
+    if (e.target.id !== "edAdd") return;
+    e.preventDefault();
+    const name = txt($("#edNew").value, 40), c = E.draft.categories;
+    if (!name) return;
+    if (c.includes(name)) { toast("Cette catégorie existe déjà"); return; }
+    c.splice(Math.max(0, c.indexOf("Divers")), 0, name);
+    edTouch(); renderEditor();
+  });
+  window.addEventListener("beforeunload", e => { if (E.dirty && staffUnlocked()) e.preventDefault(); });
+}
+
 // ---------- Navigation : lien actif ----------
 function watchSections() {
   const links = [...document.querySelectorAll("#nav a, #rail a")];
@@ -680,21 +910,23 @@ function watchSections() {
 // ---------- Événements ----------
 function bind() {
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-copy],[data-add],[data-zone],.seg-btn");
+    const t = e.target.closest("[data-copy],[data-add],[data-zone],[data-cat],[data-sort],.seg-btn");
     if (!t) return;
     if (t.dataset.copy) copy(t.dataset.copy.trim());
     else if (t.dataset.add) addToCart(t.dataset.add);
     else if (t.dataset.zone) openZone(+t.dataset.zone);
-    else if (t.classList.contains("seg-btn")) {
+    else if (t.dataset.cat !== undefined) { S.view.cat = t.dataset.cat; refreshList(); }
+    else if (t.dataset.sort) {
+      document.querySelectorAll("[data-sort]").forEach(b => b.classList.toggle("on", b === t));
+      S.view.sort = t.dataset.sort; renderShops();
+    } else if (t.classList.contains("seg-btn")) {
       document.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("on", b === t));
-      S.view.mode = t.dataset.mode; renderShops();
+      S.view.mode = t.dataset.mode; refreshList();
     }
   });
   $("#zonesGrid").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.zone) openZone(+e.target.dataset.zone); });
-  $("#q").addEventListener("input", e => { S.view.q = e.target.value; renderShops(); });
-  $("#cat").addEventListener("change", e => { S.view.cat = e.target.value; renderShops(); });
-  $("#sort").addEventListener("change", e => { S.view.sort = e.target.value; renderShops(); });
-  $("#hideEmpty").addEventListener("change", e => { S.view.hideEmpty = e.target.checked; renderShops(); });
+  $("#q").addEventListener("input", e => { S.view.q = e.target.value; refreshList(); });
+  $("#hideEmpty").addEventListener("change", e => { S.view.hideEmpty = e.target.checked; refreshList(); });
 
   $("#cartBtn").addEventListener("click", () => { $("#cart").hidden = !$("#cart").hidden; });
   $("#cartClose").addEventListener("click", () => { $("#cart").hidden = true; });
@@ -723,6 +955,7 @@ function bind() {
     } else { $("#pwErr").hidden = false; }
   });
   window.addEventListener("hashchange", showStaff);
+  bindEditor();
 }
 
 // ---------- Démarrage ----------

@@ -83,38 +83,11 @@ window.CONFIG = {
     },
   ],
 
-  // Infos ajoutées à la main sur les items, par nom Minecraft (MATERIAL).
-  //   categorie : filtre de la liste des prix
-  //   note      : petite phrase sous le nom de l'item
-  //   promo     : badge affiché à côté du prix (ex. "-20 %", "Nouveau")
-  // Un item absent de cette liste est rangé dans « Divers ».
-  items: {
-    SUGAR_CANE:      { categorie: "Cultures", note: "Tout droit sorti des fermes à canne" },
-    WHEAT:           { categorie: "Cultures" },
-    CACTUS:          { categorie: "Cultures" },
-    KELP:            { categorie: "Cultures" },
-    NETHER_WART:     { categorie: "Cultures" },
-    POPPY:           { categorie: "Cultures" },
-    WITHER_ROSE:     { categorie: "Cultures" },
-    BONE:            { categorie: "Drops de mobs" },
-    BONE_MEAL:       { categorie: "Drops de mobs" },
-    SPIDER_EYE:      { categorie: "Drops de mobs" },
-    STRING:          { categorie: "Drops de mobs" },
-    GUNPOWDER:       { categorie: "Drops de mobs" },
-    BLAZE_ROD:       { categorie: "Drops de mobs" },
-    COOKED_PORKCHOP: { categorie: "Drops de mobs" },
-    IRON_INGOT:      { categorie: "Drops de mobs" },
-    WHITE_WOOL:      { categorie: "Drops de mobs" },
-    ARROW:           { categorie: "Combat" },
-    TIPPED_ARROW:    { categorie: "Combat" },
-    POTION:          { categorie: "Combat" },
-    FIREWORK_ROCKET: { categorie: "Combat" },
-    ENCHANTED_BOOK:  { categorie: "Combat" },
-    GLASS:           { categorie: "Blocs" },
-    DIRT:            { categorie: "Blocs" },
-    GRASS_BLOCK:     { categorie: "Blocs" },
-    GLOWSTONE:       { categorie: "Blocs" },
-    SHULKER_BOX:     { categorie: "Divers" },
-    PAPER:           { categorie: "Divers" },
+  // Catégories, notes et promos des items : elles sont dans data/items.json
+  // et se modifient depuis l'Espace équipe (bouton « Enregistrer sur le site »).
+  // Dépôt GitHub du site, utilisé par ce bouton :
+  github: {
+    depot: "warpcashvk/warpcashvk.github.io", branche: "main", fichier: "data/items.json",
+    email: "348219096+warpcashvk@users.noreply.github.com",   // adresse « noreply » du compte GitHub
   },
 };

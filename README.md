@@ -10,7 +10,8 @@ rien à mettre à jour à la main quand vous changez un shop en jeu.
 |---|---|
 | `index.html` | La page |
 | `css/style.css` | Le design |
-| `js/config.js` | **Le seul fichier à modifier au quotidien** : textes des zones, catégories et promos des items, Discord, skins, mot de passe |
+| `js/config.js` | **Le fichier à modifier au quotidien** : textes des zones, Discord, skins, mot de passe |
+| `data/items.json` | Catégories, notes et promos des items (modifiables depuis l'Espace équipe) |
 | `js/app.js` | La logique (API, panier, carte, classements…) |
 | `img/zones/` | Les screenshots de la visite |
 | `img/skins/` | Les skins des fondateurs (PNG 64×64) |
@@ -20,11 +21,29 @@ rien à mettre à jour à la main quand vous changez un shop en jeu.
 Tout se passe dans `js/config.js` :
 
 - **Zones** : changez `titre` et `texte`. Pour ajouter une zone, mettez l'image dans `img/zones/` et ajoutez un bloc dans `zones`.
-- **Items** : `categorie`, `note` (petite phrase sous le nom) et `promo` (badge, ex. `"-20 %"`), par nom Minecraft (`SUGAR_CANE`, `WHEAT`…).
 - **Discord** : collez le lien d'invitation dans `discord`.
 - **Skins** : mettez le fichier PNG du skin dans `img/skins/` et indiquez son chemin dans `skin`.
   Le site dessine le personnage et la tête à partir de ce fichier.
 - **Secteurs** : renommez « Secteur principal » / « Secteur est » comme vous voulez.
+
+## Catégories, notes et promos des items
+
+Elles se changent depuis le site : **Espace équipe** (lien en bas de page) → « Catégories et textes des items ».
+On peut créer, renommer, supprimer et réordonner les catégories, et pour chaque item choisir sa catégorie,
+sa note (petite phrase sous le nom) et sa promo (badge, ex. « -20 % »). Le bouton « Enregistrer sur le site »
+écrit le fichier `data/items.json` sur GitHub ; le site est à jour pour tout le monde 1 à 2 minutes après.
+
+Pour enregistrer, il faut un **jeton GitHub** (à créer une fois, par chacun de vous deux) :
+
+1. Sur github.com, connecté au compte `warpcashvk` : photo de profil → **Settings** → **Developer settings**
+   → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+2. Nom : `Warp Cash`, expiration au choix (ex. 1 an).
+3. **Repository access** : *Only select repositories* → `warpcashvk/warpcashvk.github.io`.
+4. **Permissions** → *Repository permissions* → **Contents : Read and write** (rien d'autre).
+5. **Generate token**, copier le jeton (`github_pat_…`) et le coller dans l'Espace équipe.
+
+Le jeton reste dans le navigateur (cocher « Se souvenir sur cet appareil » pour ne pas le recoller).
+Ne le partagez jamais : avec lui, on peut modifier le site. En cas de doute, supprimez-le sur GitHub et créez-en un autre.
 
 ## Changer le mot de passe de l'espace équipe
 
