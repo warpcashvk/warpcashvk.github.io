@@ -669,7 +669,19 @@ function renderTeam() {
   $("#contact").innerHTML = `
     <h3>Nous contacter</h3>
     <p><b>En jeu :</b> si on est en ligne, <code>/msg pseudo message</code>. Sinon, <code>/mail pseudo message</code>, on le lira à la connexion. Le bouton sous chaque fondateur te donne la bonne commande.</p>
-    <p><b>Discord :</b> ${/^https:\/\//.test(C.discord) ? `<a class="btn btn-sm" href="${esc(C.discord)}" target="_blank" rel="noopener">Rejoindre le Discord</a>` : "lien bientôt disponible."}</p>`;
+    <p><b>Discord :</b> ${/^https:\/\//.test(C.discord) ? `<a class="btn btn-sm" href="${esc(C.discord)}" target="_blank" rel="noopener">Rejoindre le Discord</a>` : "lien bientôt disponible."}</p>
+    ${MAIL ? `<p><b>Par mail :</b> <a data-mail href="#"></a></p>` : ""}`;
+  renderMail();
+}
+
+// ---------- Adresse mail (écrite ici pour ne pas être dans le HTML brut) ----------
+const MAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(C.email || "") ? C.email : "";
+function renderMail() {
+  document.querySelectorAll("[data-mail]").forEach(a => {
+    if (!MAIL) { a.replaceWith(document.createTextNode("en jeu uniquement pour l'instant")); return; }
+    a.href = "mailto:" + MAIL;
+    a.textContent = MAIL;
+  });
 }
 
 // ---------- Classements ----------
@@ -1062,6 +1074,7 @@ S.cart = loadCart();
 loadSkins();
 renderWarps();
 renderZones();
+renderMail();
 bind();
 bindMenu();
 showStaff();

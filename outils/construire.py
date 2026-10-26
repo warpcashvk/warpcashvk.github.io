@@ -11,7 +11,7 @@ import html
 import io
 import os
 
-VERSION = "9"
+VERSION = "10"
 SITE = "https://warpcashvk.github.io"
 TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/"
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -42,13 +42,15 @@ PAGES = [
          desc="Les places de GambaleSempai et shadowyahit dans le top 100 des classements de VikingCraft FR : fortune, niveau, collections…"),
     dict(page="guide", dossier="guide", titre="Guide du joueur – Warp Cash VikingCraft", classe="guide",
          desc="Venir au warp Cash (/warp cash), acheter et vendre sur les shops de GambaleSempai et shadowyahit, les retrouver avec /market : le guide du joueur sur VikingCraft FR."),
+    dict(page="mentions", dossier="mentions-legales", titre="Mentions légales et confidentialité – Warp Cash", classe="guide",
+         desc="Mentions légales du site du warp Cash (site de joueurs non officiel, non professionnel) et ce qu'il fait de vos données : aucun cookie, aucun suivi."),
     dict(page="gestion", dossier="gestion", titre="Espace équipe – Warp Cash", prive=True,
          desc="Espace réservé à l'équipe du warp Cash."),
 ]
 
 CSP = ("default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; "
-       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
-       "font-src https://fonts.gstatic.com; "
+       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+       "font-src 'self'; "
        "img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net https://vkanalyzer.nexsarum.dev https://cdnjs.cloudflare.com; "
        "connect-src 'self' https://api.vikingcraft.fr https://api.github.com; "
        "object-src 'none'; base-uri 'self'; form-action 'self'")
@@ -125,8 +127,9 @@ def head(p):
     out += ('<link rel="icon" href="/favicon.ico" sizes="48x48">\n'
             '<link rel="icon" type="image/png" sizes="192x192" href="/img/icones/emeraude-192.png">\n'
             '<link rel="apple-touch-icon" href="/img/icones/apple-touch-icon.png">\n')
-    out += '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-    out += '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Pixelify+Sans:wght@700&display=swap">\n'
+    # Polices hébergées sur le site : aucun appel à Google Fonts (RGPD)
+    out += '<link rel="preload" href="/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
+    out += f'<link rel="stylesheet" href="/css/polices.css?v={VERSION}">\n'
     if p["page"] == "carte":
         out += LEAFLET_CSS + "\n"
     out += f'<link rel="stylesheet" href="/css/style.css?v={VERSION}">\n'
@@ -160,9 +163,9 @@ def pied():
     liens = " · ".join(f'<a href="{u}">{n}</a>' for k, u, n in MENU)
     return f"""<footer class="footer">
   <p class="footer-nav">{liens}</p>
-  <p>Site fait par et pour le warp Cash · non officiel · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
-  <p class="muted">Minecraft et ses textures © Mojang. Carte : VkAnalyzer.</p>
-  <p><a href="/gestion/" class="staff-link">Espace équipe</a></p>
+  <p>Site de joueurs fait par et pour le warp Cash · non affilié à VikingCraft · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
+  <p class="muted">Site non officiel Minecraft, ni approuvé par Mojang ou Microsoft, ni associé à eux. Minecraft et ses textures © Mojang AB. Carte : VkAnalyzer.</p>
+  <p><a href="/mentions-legales/">Mentions légales &amp; confidentialité</a> · <a href="/gestion/" class="staff-link">Espace équipe</a></p>
 </footer>
 
 <!-- Panier -->
@@ -211,8 +214,10 @@ def sitemap():
     lignes = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for p in urls:
         u = SITE + "/" + (p["dossier"] + "/" if p["dossier"] else "")
-        prio = "1.0" if p["page"] == "accueil" else "0.8" if p["page"] in ("prix", "zones", "guide") else "0.6"
-        freq = "daily" if p["page"] in ("accueil", "prix", "carte") else "weekly"
+        prio = ("1.0" if p["page"] == "accueil" else "0.8" if p["page"] in ("prix", "zones", "guide")
+                else "0.2" if p["page"] == "mentions" else "0.6")
+        freq = ("daily" if p["page"] in ("accueil", "prix", "carte")
+                else "yearly" if p["page"] == "mentions" else "weekly")
         lignes.append(f"  <url><loc>{u}</loc><changefreq>{freq}</changefreq><priority>{prio}</priority></url>")
     lignes.append("</urlset>")
     return "\n".join(lignes) + "\n"

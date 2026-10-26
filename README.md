@@ -24,6 +24,7 @@ Tout se passe dans `js/config.js` :
 
 - **Zones** : changez `titre` et `texte`. Pour ajouter une zone, mettez l'image dans `img/zones/` et ajoutez un bloc dans `zones`.
 - **Discord** : collez le lien d'invitation dans `discord`.
+- **Mail de contact** : `email` (affiché sur la page Équipe et dans les mentions légales).
 - **Skins** : mettez le fichier PNG du skin dans `img/skins/` et indiquez son chemin dans `skin`.
   Le site dessine le personnage et la tête à partir de ce fichier.
 - **Secteurs** : renommez « Secteur principal » / « Secteur est » comme vous voulez.
@@ -107,6 +108,16 @@ Pour ajouter une page : un fichier dans `outils/pages/`, une ligne dans `PAGES` 
 Les navigateurs gardent les fichiers en cache. Après une modification de `css/` ou `js/`,
 augmentez `VERSION` en haut de `outils/construire.py` puis relancez le script :
 tout le monde verra la nouvelle version tout de suite.
+
+## Mentions légales et données
+
+La page `/mentions-legales/` (fichier `outils/pages/mentions.html`) contient les mentions légales
+(site non professionnel : éditeurs sous pseudo + hébergeur GitHub, LCEN art. 6-III-2), les avertissements
+Mojang / VikingCraft, les crédits et la politique de confidentialité.
+**À mettre à jour** si vous ajoutez un service externe, un stockage dans le navigateur, un formulaire,
+une mesure d'audience (qui demanderait alors un bandeau de consentement) ou si le site devient commercial.
+
+Les polices sont hébergées dans `polices/` (licence OFL, `polices/OFL.txt`) : pas d'appel à Google Fonts.
 
 ## Crédits
 

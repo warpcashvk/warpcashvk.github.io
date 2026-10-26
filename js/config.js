@@ -28,6 +28,10 @@ window.CONFIG = {
   // Lien d'invitation Discord. Laisser vide ("") pour cacher le bouton.
   discord: "",
 
+  // Adresse mail de contact (page Équipe et mentions légales). Elle est écrite par le
+  // JavaScript, donc absente du HTML brut que lisent les robots à spam.
+  email: "warpcashvk@gmail.com",
+
   // Mot de passe de la page « Espace équipe » : jamais écrit en clair, seulement son empreinte
   // (PBKDF2-SHA256 salée). Pour le changer, voir README.md.
   motDePasse: {
