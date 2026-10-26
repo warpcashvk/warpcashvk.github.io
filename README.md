@@ -55,7 +55,7 @@ Le site change de thème tout seul, chaque année (fichier `js/theme.js`) :
 - **Noël** du 1er novembre au 1er janvier inclus : rouge et vert, neige qui tombe, guirlande, lanternes ;
 - le reste de l'année : thème classique.
 
-Les visiteurs peuvent couper le thème avec le bouton 🎃 / 🎄 en bas à gauche (retenu jusqu'à la saison suivante).
+Les visiteurs peuvent couper le thème avec le bouton 🎃 / 🎄 en bas à gauche (coupé seulement tant que l'onglet reste ouvert).
 L'animation est coupée d'office pour ceux qui ont demandé moins d'animations dans leur système.
 Pour voir un thème hors saison : ajouter `?theme=halloween`, `?theme=noel` ou `?theme=classique` à l'adresse.
 

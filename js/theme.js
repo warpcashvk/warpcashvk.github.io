@@ -31,8 +31,11 @@ if (!cur) return;
 
 const S = SEASONS[cur.id], KEY = "wc_theme_off", stamp = `${cur.id}-${cur.an}`;
 const root = document.documentElement;
-const isOff = () => { try { return localStorage.getItem(KEY) === stamp; } catch { return false; } };
-const setOff = off => { try { off ? localStorage.setItem(KEY, stamp) : localStorage.removeItem(KEY); } catch { /* stockage indisponible */ } };
+// Coupé seulement le temps de l'onglet (sessionStorage) : le thème revient au prochain passage.
+// L'ancien réglage gardé pour toute la saison (localStorage) est effacé.
+try { localStorage.removeItem(KEY); } catch { /* stockage indisponible */ }
+const isOff = () => { try { return sessionStorage.getItem(KEY) === stamp; } catch { return false; } };
+const setOff = off => { try { off ? sessionStorage.setItem(KEY, stamp) : sessionStorage.removeItem(KEY); } catch { /* stockage indisponible */ } };
 
 // Posé tout de suite (script dans le <head>) pour éviter un flash du thème classique
 if (!isOff()) root.dataset.theme = cur.id;

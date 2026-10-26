@@ -11,7 +11,7 @@ import html
 import io
 import os
 
-VERSION = "8"
+VERSION = "9"
 SITE = "https://warpcashvk.github.io"
 TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/"
 ICI = os.path.dirname(os.path.abspath(__file__))
