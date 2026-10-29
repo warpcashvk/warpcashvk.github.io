@@ -341,10 +341,12 @@ select.field { cursor: pointer; }
 .cart .hint { margin: 10px 0 0; font-size: 12px; }
 
 /* ---------- Carte ---------- */
-.map-frame { padding: 8px; }
-#map { height: min(640px, 70vh); background: #0b1626; border-radius: 10px; }
-.leaflet-container { font-family: var(--body); }
-.leaflet-tile { image-rendering: pixelated; }
+.coords { display: grid; gap: 18px; margin-top: 24px; }
+.coord-group { padding: 14px; min-width: 0; }
+.coord-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; padding: 4px 6px 10px; }
+.coord-head h2 { margin: 0; font: 400 28px var(--display); }
+.coord-group .table td .coord { font-family: var(--mono); font-weight: 700; color: var(--cash); }
+.row-out td { color: var(--muted); }
 .leaflet-bar a { background: var(--panel-2); color: var(--text); border-color: var(--line-2); }
 .leaflet-bar a:hover { background: var(--line-2); color: var(--text); }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0d0812; color: var(--text); border: 1px solid var(--line-2); border-radius: 12px; }

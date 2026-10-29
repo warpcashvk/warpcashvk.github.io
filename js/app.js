@@ -8,7 +8,6 @@ const C = window.CONFIG;
 const $ = (s, r = document) => r.querySelector(s);
 const OWNERS = C.fondateurs.map(f => f.pseudo.toLowerCase());
 const TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/";
-const VK_TILES = "https://vkanalyzer.nexsarum.dev/map-tiles/overworld/";
 const FULL_STOCK = 3456;   // un double coffre plein (54 stacks)
 const LOW_STOCK = 64;
 const PAGE = document.body.dataset.page || "accueil";
@@ -369,7 +368,7 @@ function renderAll() {
   if ($("#deals")) renderDeals();
   if ($("#team")) renderTeam();
   if ($("#teamPeek")) renderTeamPeek();
-  if ($("#map")) { if (map) renderMap(); else initMap(); }
+  if ($("#coords")) renderCoords();
   renderCart();
   if (PAGE === "gestion" && staffUnlocked()) { renderDash(); if (!E.dirty) renderEditor(); }
   const up = $("#shopsUpdated");
@@ -572,73 +571,46 @@ function cartText() {
   return [`Commande Warp Cash :`, ...lines.map(l => `- ${num(l.q)} × ${l.n} (${money(l.u)}) = ${money(l.u * l.q)}`), `Total : ${money(total)}`].join("\n");
 }
 
-// ---------- Carte ----------
-let map, layerShops, layerClusters;
-function initMap() {
-  if (map || !window.L) return;
-  const CRS = L.extend({}, L.CRS.Simple, { transformation: new L.Transformation(1 / 128, 128, 1 / 128, 128) });
-  map = L.map("map", { crs: CRS, minZoom: 0, maxZoom: 9, zoomSnap: 1, attributionControl: false });
-  L.tileLayer(VK_TILES + "{z}/{x}/{y}.png?v=2026-10-11T10%3A49%3A34.970Z", {
-    tileSize: 256, minZoom: 0, maxNativeZoom: 7, maxZoom: 9, noWrap: true,
-    bounds: L.latLngBounds([-16384, -16384], [16384, 16384]),
-  }).addTo(map);
-  layerShops = L.layerGroup(); layerClusters = L.layerGroup().addTo(map);
-  map.on("zoomend", syncMapLayers);
-  map.setView([-7760, -900], 2);
-  renderMap(true);
-}
-function syncMapLayers() {
-  const detailed = map.getZoom() >= 6;
-  if (detailed) { map.removeLayer(layerClusters); layerShops.addTo(map); }
-  else { map.removeLayer(layerShops); layerClusters.addTo(map); }
-}
-function renderMap(fit) {
-  if (!map || !S.ours.length) return;
-  layerShops.clearLayers(); layerClusters.clearLayers();
-  const shops = S.ours.filter(s => s.world === "world");
-  // un marqueur par bloc (les shops collés sont regroupés dans la même bulle)
-  const spots = new Map();
-  for (const s of shops) {
-    const k = `${Math.round(s.x / 2)}:${Math.round(s.z / 2)}`;
-    if (!spots.has(k)) spots.set(k, []);
-    spots.get(k).push(s);
+// ---------- Coordonnées des shops, rangées par secteur ----------
+// (L'ancienne carte utilisait les tuiles de VkAnalyzer, qui bloque désormais les autres sites.)
+function renderCoords() {
+  const box = $("#coords");
+  if (!S.ours.length) return;
+  const groups = new Map();
+  for (const s of S.ours) {
+    const k = s.world && s.world !== "world" ? `Autre monde (${s.world})` : s.sector;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(s);
   }
-  for (const group of spots.values()) {
-    const s0 = group[0], out = group.every(s => s.remainingStock <= 0);
-    const ic = L.divIcon({ className: "", html: `<div class="pin${out ? " out" : ""}" style="width:32px;height:32px">${icon(s0.material)}</div>`, iconSize: [32, 32], iconAnchor: [16, 16] });
-    L.marker([s0.z + 0.5, s0.x + 0.5], { icon: ic, title: group.map(s => s.name).join(", ") })
-      .bindPopup(popupHtml(group)).addTo(layerShops);
-  }
-  // une bulle par secteur pour les zooms éloignés
-  const bySector = new Map();
-  for (const s of shops) {
-    const k = s.sector === "Hors secteur" ? `hors:${Math.round(s.x / 300)}:${Math.round(s.z / 300)}` : s.sector;
-    if (!bySector.has(k)) bySector.set(k, []);
-    bySector.get(k).push(s);
-  }
-  for (const group of bySector.values()) {
-    const x = group.reduce((a, s) => a + s.x, 0) / group.length, z = group.reduce((a, s) => a + s.z, 0) / group.length;
-    const size = 30 + Math.min(20, group.length);
-    const ic = L.divIcon({ className: "", html: `<div class="cluster" style="width:${size}px;height:${size}px">${group.length}</div>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
-    L.marker([z, x], { icon: ic, title: group[0].sector })
-      .on("click", () => map.flyTo([z, x], group.length > 1 ? 7 : 8))
-      .bindTooltip(`${esc(group[0].sector)} · ${group.length} shop${group.length > 1 ? "s" : ""}`, { direction: "top" })
-      .addTo(layerClusters);
-  }
-  // vue de départ : les secteurs nommés (les shops isolés restent visibles en dézoomant)
-  if (fit && shops.length) {
-    const main = shops.filter(s => s.sector !== "Hors secteur");
-    map.invalidateSize();
-    map.fitBounds(L.latLngBounds((main.length ? main : shops).map(s => [s.z, s.x])), { padding: [60, 60], maxZoom: 5 });
-  }
-  syncMapLayers();
-}
-function popupHtml(group) {
-  return group.map(s => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0">
-      ${icon(s.material, 24)}
-      <div><b>${esc(s.name)}</b> · ${s.type === "sell" ? "vendu" : "racheté"} ${money(s.price)}<br>
-      ${s.remainingStock > 0 ? (s.type === "sell" ? `${num(s.remainingStock)} en stock` : `encore ${num(s.remainingStock)}`) : "<span style='color:var(--red)'>vide</span>"} · ${esc(s.ownerName)}</div>
-    </div>`).join("") + `<div style="color:var(--muted);margin-top:4px">X ${group[0].x} · Y ${group[0].y} · Z ${group[0].z}</div>`;
+  // secteurs dans l'ordre de config.js, puis « Hors secteur » et les autres mondes
+  const order = C.secteurs.map(z => z.nom);
+  const rank = k => (order.includes(k) ? order.indexOf(k) : order.length + (k === "Hors secteur" ? 0 : 1));
+  const keys = [...groups.keys()].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, "fr"));
+  box.innerHTML = keys.map(k => {
+    const list = groups.get(k).sort((a, b) => a.name.localeCompare(b.name, "fr") || a.type.localeCompare(b.type));
+    const z = C.secteurs.find(x => x.nom === k);
+    return `
+    <section class="coord-group panel">
+      <header class="coord-head">
+        <h2>${esc(k)}</h2>
+        <span class="muted">${list.length} shop${list.length > 1 ? "s" : ""}${z ? ` · centre <span class="coord" data-copy="${z.x} ~ ${z.z}" title="Copier">X ${z.x} · Z ${z.z}</span>` : ""}</span>
+      </header>
+      <div class="table-wrap"><table class="table">
+        <tr><th>Item</th><th>Coordonnées <small>(X Y Z)</small></th><th>Type</th><th class="num">Prix / unité</th><th class="num">Stock</th><th>Shop de</th></tr>
+        ${list.map(s => {
+          const out = s.remainingStock <= 0;
+          return `<tr${out ? ' class="row-out"' : ""}>
+          <td>${icon(s.material, 20)}${esc(s.name)}</td>
+          <td><span class="coord" data-copy="${s.x} ${s.y} ${s.z}" title="Copier">${s.x} ${s.y} ${s.z}</span></td>
+          <td>${s.type === "sell" ? "Vente" : "Rachat"}</td>
+          <td class="num">${money(unit(s))}</td>
+          <td class="num">${out ? `<span class="badge b-out">${s.type === "sell" ? "Rupture" : "Complet"}</span>` : num(s.remainingStock)}</td>
+          <td>${esc(s.ownerName)}</td>
+        </tr>`;
+        }).join("")}
+      </table></div>
+    </section>`;
+  }).join("");
 }
 
 // ---------- Équipe ----------

@@ -11,7 +11,7 @@ import html
 import io
 import os
 
-VERSION = "12"
+VERSION = "14"
 SITE = "https://warpcashvk.github.io"
 TEX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.1/assets/minecraft/textures/"
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +21,7 @@ MENU = [
     ("accueil", "/", "Accueil"),
     ("zones", "/zones/", "Zones"),
     ("prix", "/prix/", "Prix"),
-    ("carte", "/carte/", "Carte"),
+    ("carte", "/carte/", "Coordonnées"),
     ("equipe", "/equipe/", "Équipe"),
     ("classements", "/classements/", "Classements"),
     ("guide", "/guide/", "Guide"),
@@ -34,8 +34,8 @@ PAGES = [
          desc="Le warp Cash de VikingCraft FR en images : le hall, les fermes à canne, la tour des cultures, la mob farm et la salle des coffres."),
     dict(page="prix", dossier="prix", titre="Prix du warp Cash – shops VikingCraft en direct",
          desc="Les prix en direct des shops de GambaleSempai et shadowyahit sur VikingCraft FR, comparés au reste du serveur et à l'hôtel des ventes."),
-    dict(page="carte", dossier="carte", titre="Carte des shops du warp Cash – VikingCraft FR",
-         desc="Tous les shops de GambaleSempai et shadowyahit sur la carte du Continent de VikingCraft FR, avec leurs coordonnées."),
+    dict(page="carte", dossier="carte", titre="Coordonnées des shops du warp Cash – VikingCraft FR",
+         desc="Les coordonnées X Y Z de tous les shops de GambaleSempai et shadowyahit sur VikingCraft FR, rangées par secteur, avec prix et stock."),
     dict(page="equipe", dossier="equipe", titre="L'équipe du warp Cash – GambaleSempai et shadowyahit",
          desc="GambaleSempai et shadowyahit, les fondateurs du warp Cash sur VikingCraft FR : qui est en ligne et comment les contacter sur Discord."),
     dict(page="classements", dossier="classements", titre="Classements de GambaleSempai et shadowyahit – VikingCraft FR",
@@ -48,15 +48,13 @@ PAGES = [
          desc="Espace réservé à l'équipe du warp Cash."),
 ]
 
-CSP = ("default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; "
-       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+CSP = ("default-src 'self'; script-src 'self'; "
+       "style-src 'self' 'unsafe-inline'; "
        "font-src 'self'; "
-       "img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net https://vkanalyzer.nexsarum.dev https://cdnjs.cloudflare.com; "
+       "img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net; "
        "connect-src 'self' https://api.vikingcraft.fr https://api.github.com; "
        "object-src 'none'; base-uri 'self'; form-action 'self'")
 
-LEAFLET_CSS = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">'
-LEAFLET_JS = '<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>'
 
 JSON_LD = """<script type="application/ld+json">
 {
@@ -130,8 +128,6 @@ def head(p):
     # Polices hébergées sur le site : aucun appel à Google Fonts (RGPD)
     out += '<link rel="preload" href="/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
     out += f'<link rel="stylesheet" href="/css/polices.css?v={VERSION}">\n'
-    if p["page"] == "carte":
-        out += LEAFLET_CSS + "\n"
     out += f'<link rel="stylesheet" href="/css/style.css?v={VERSION}">\n'
     out += f'<script src="/js/theme.js?v={VERSION}"></script>\n'
     return out
@@ -164,7 +160,7 @@ def pied():
     return f"""<footer class="footer">
   <p class="footer-nav">{liens}</p>
   <p>Site de joueurs fait par et pour le warp Cash · non affilié à VikingCraft · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
-  <p class="muted">Site non officiel Minecraft, ni approuvé par Mojang ou Microsoft, ni associé à eux. Minecraft et ses textures © Mojang AB. Carte : VkAnalyzer.</p>
+  <p class="muted">Site non officiel Minecraft, ni approuvé par Mojang ou Microsoft, ni associé à eux. Minecraft et ses textures © Mojang AB.</p>
   <p><a href="/mentions-legales/">Mentions légales &amp; confidentialité</a> · <a href="/gestion/" class="staff-link">Espace équipe</a></p>
 </footer>
 
@@ -199,8 +195,7 @@ def pied():
 def page(p):
     contenu = io.open(os.path.join(ICI, "pages", p["page"] + ".html"), encoding="utf-8").read().rstrip() + "\n"
     classe = f' class="{p["classe"]}"' if p.get("classe") else ""
-    scripts = (LEAFLET_JS + "\n" if p["page"] == "carte" else "") + \
-        f'<script src="/js/config.js?v={VERSION}"></script>\n<script src="/js/app.js?v={VERSION}"></script>\n'
+    scripts = f'<script src="/js/config.js?v={VERSION}"></script>\n<script src="/js/app.js?v={VERSION}"></script>\n'
     return ("<!doctype html>\n<html lang=\"fr\">\n<head>\n<!-- Page générée par outils/construire.py : modifier outils/pages/"
             + p["page"] + ".html puis relancer le script. -->\n"
             + head(p) + "</head>\n"

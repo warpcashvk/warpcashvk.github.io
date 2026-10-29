@@ -14,7 +14,7 @@ rien à mettre à jour à la main quand vous changez un shop en jeu.
 | `css/style.css` | Le design |
 | `js/config.js` | **Le fichier à modifier au quotidien** : textes des zones, Discord, skins |
 | `data/items.json` | Catégories, notes et promos des items (modifiables depuis l'Espace équipe) |
-| `js/app.js` | La logique (API, panier, carte, classements…) |
+| `js/app.js` | La logique (API, panier, coordonnées, classements…) |
 | `img/zones/` | Les screenshots de la visite |
 | `img/skins/` | Les skins des fondateurs (PNG 64×64) |
 
@@ -59,7 +59,7 @@ Chaque modification envoyée sur la branche `main` apparaît sur le site en une 
 
 ## Les pages
 
-Le site a une page par rubrique : accueil (`/`), prix (`/prix/`), zones, carte, équipe, classements,
+Le site a une page par rubrique : accueil (`/`), prix (`/prix/`), zones, coordonnées des shops (`/carte/`), équipe, classements,
 guide et une page réservée à l'équipe (non référencée sur Google).
 Le menu, l'en-tête et le pied de page sont communs : ils sont écrits une seule fois dans `outils/construire.py`.
 
@@ -89,5 +89,4 @@ Les polices sont hébergées dans `polices/` (licence OFL, `polices/OFL.txt`) : 
 ## Crédits
 
 - Données : API publique VikingCraft.
-- Carte : tuiles de VkAnalyzer (site fait par un joueur) — si elles disparaissent, la carte s'affiche vide.
 - Textures d'items : Minecraft © Mojang, via le dépôt InventivetalentDev/minecraft-assets.

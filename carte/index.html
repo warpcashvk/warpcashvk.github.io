@@ -4,34 +4,33 @@
 <!-- Page générée par outils/construire.py : modifier outils/pages/carte.html puis relancer le script. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self'; img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net https://vkanalyzer.nexsarum.dev https://cdnjs.cloudflare.com; connect-src 'self' https://api.vikingcraft.fr https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cdn.jsdelivr.net https://mc-heads.net; connect-src 'self' https://api.vikingcraft.fr https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Carte des shops du warp Cash – VikingCraft FR</title>
-<meta name="description" content="Tous les shops de GambaleSempai et shadowyahit sur la carte du Continent de VikingCraft FR, avec leurs coordonnées.">
+<title>Coordonnées des shops du warp Cash – VikingCraft FR</title>
+<meta name="description" content="Les coordonnées X Y Z de tous les shops de GambaleSempai et shadowyahit sur VikingCraft FR, rangées par secteur, avec prix et stock.">
 <link rel="canonical" href="https://warpcashvk.github.io/carte/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Warp Cash – VikingCraft FR">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:title" content="Carte des shops du warp Cash – VikingCraft FR">
-<meta property="og:description" content="Tous les shops de GambaleSempai et shadowyahit sur la carte du Continent de VikingCraft FR, avec leurs coordonnées.">
+<meta property="og:title" content="Coordonnées des shops du warp Cash – VikingCraft FR">
+<meta property="og:description" content="Les coordonnées X Y Z de tous les shops de GambaleSempai et shadowyahit sur VikingCraft FR, rangées par secteur, avec prix et stock.">
 <meta property="og:url" content="https://warpcashvk.github.io/carte/">
 <meta property="og:image" content="https://warpcashvk.github.io/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Warp Cash sur VikingCraft FR : /warp cash">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Carte des shops du warp Cash – VikingCraft FR">
-<meta name="twitter:description" content="Tous les shops de GambaleSempai et shadowyahit sur la carte du Continent de VikingCraft FR, avec leurs coordonnées.">
+<meta name="twitter:title" content="Coordonnées des shops du warp Cash – VikingCraft FR">
+<meta name="twitter:description" content="Les coordonnées X Y Z de tous les shops de GambaleSempai et shadowyahit sur VikingCraft FR, rangées par secteur, avec prix et stock.">
 <meta name="twitter:image" content="https://warpcashvk.github.io/img/og.jpg">
 <meta name="theme-color" content="#c6f548">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="/img/icones/emeraude-192.png">
 <link rel="apple-touch-icon" href="/img/icones/apple-touch-icon.png">
 <link rel="preload" href="/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/polices.css?v=12">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="/css/style.css?v=12">
-<script src="/js/theme.js?v=12"></script>
+<link rel="stylesheet" href="/css/polices.css?v=14">
+<link rel="stylesheet" href="/css/style.css?v=14">
+<script src="/js/theme.js?v=14"></script>
 </head>
 <body data-page="carte">
 
@@ -44,7 +43,7 @@
     <a href="/">Accueil</a>
     <a href="/zones/">Zones</a>
     <a href="/prix/">Prix</a>
-    <a href="/carte/" class="on" aria-current="page">Carte</a>
+    <a href="/carte/" class="on" aria-current="page">Coordonnées</a>
     <a href="/equipe/">Équipe</a>
     <a href="/classements/">Classements</a>
     <a href="/guide/">Guide</a>
@@ -63,19 +62,18 @@
   <section class="section">
     <div class="wrap">
       <p class="over">Où nous trouver</p>
-      <h1 class="h2">Carte des shops</h1>
-      <p class="lead">Tous nos shops sur la carte du Continent. Zoome pour séparer les shops d'un même secteur, clique sur un coffre pour voir ce qu'il contient.</p>
-      <div class="map-frame panel"><div id="map"></div></div>
-      <p class="credit">Terrain : <a href="https://vkanalyzer.nexsarum.dev" target="_blank" rel="noopener">VkAnalyzer</a>, une carte faite par un joueur.</p>
+      <h1 class="h2">Coordonnées des shops</h1>
+      <p class="lead">Le plus simple pour venir : <code>/warp cash</code>. Ici, chaque coffre avec ses coordonnées, rangé par secteur, pour retrouver un shop précis (touche <kbd>F3</kbd> en jeu). Clique sur des coordonnées pour les copier.</p>
+      <div class="coords" id="coords"><p class="loading">Chargement des shops…</p></div>
     </div>
   </section>
 
 </main>
 
 <footer class="footer">
-  <p class="footer-nav"><a href="/">Accueil</a> · <a href="/zones/">Zones</a> · <a href="/prix/">Prix</a> · <a href="/carte/">Carte</a> · <a href="/equipe/">Équipe</a> · <a href="/classements/">Classements</a> · <a href="/guide/">Guide</a></p>
+  <p class="footer-nav"><a href="/">Accueil</a> · <a href="/zones/">Zones</a> · <a href="/prix/">Prix</a> · <a href="/carte/">Coordonnées</a> · <a href="/equipe/">Équipe</a> · <a href="/classements/">Classements</a> · <a href="/guide/">Guide</a></p>
   <p>Site de joueurs fait par et pour le warp Cash · non affilié à VikingCraft · données <a href="https://api.vikingcraft.fr" target="_blank" rel="noopener">api.vikingcraft.fr</a></p>
-  <p class="muted">Site non officiel Minecraft, ni approuvé par Mojang ou Microsoft, ni associé à eux. Minecraft et ses textures © Mojang AB. Carte : VkAnalyzer.</p>
+  <p class="muted">Site non officiel Minecraft, ni approuvé par Mojang ou Microsoft, ni associé à eux. Minecraft et ses textures © Mojang AB.</p>
   <p><a href="/mentions-legales/">Mentions légales &amp; confidentialité</a> · <a href="/gestion/" class="staff-link">Espace équipe</a></p>
 </footer>
 
@@ -105,8 +103,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/js/config.js?v=12"></script>
-<script src="/js/app.js?v=12"></script>
+<script src="/js/config.js?v=14"></script>
+<script src="/js/app.js?v=14"></script>
 </body>
 </html>
